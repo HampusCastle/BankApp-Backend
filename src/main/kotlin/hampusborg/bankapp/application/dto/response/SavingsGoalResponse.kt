@@ -1,4 +1,12 @@
 package hampusborg.bankapp.application.dto.response
 
-class SavingsGoalResponse {
-}
+import java.time.LocalDate
+
+data class SavingsGoalResponse(
+    val id: String,
+    val name: String,
+    val userId: String,
+    val targetAmount: Double,
+    val targetDate: LocalDate,
+    val currentAmount: Double
+)

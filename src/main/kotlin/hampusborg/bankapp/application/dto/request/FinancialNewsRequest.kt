@@ -1,4 +1,7 @@
 package hampusborg.bankapp.application.dto.request
 
-class FinancialNewsRequest {
-}
+data class FinancialNewsRequest(
+    val page: Int = 1,
+    val pageSize: Int = 5,
+    val category: String = "business"
+)

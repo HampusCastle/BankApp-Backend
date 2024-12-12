@@ -1,4 +1,8 @@
 package hampusborg.bankapp.application.dto.response
 
-class ArticleResponse {
-}
+data class ArticleResponse(
+    val title: String,
+    val description: String?,
+    val source: SourceResponse,
+    val url: String
+)

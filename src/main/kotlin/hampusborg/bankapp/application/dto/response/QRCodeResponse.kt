@@ -1,4 +1,5 @@
 package hampusborg.bankapp.application.dto.response
 
-class QRCodeResponse {
-}
+data class QRCodeResponse(
+    val qrCode: String
+)

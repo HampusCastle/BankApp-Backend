@@ -1,4 +1,6 @@
 package hampusborg.bankapp.application.dto.response
 
-class MonthlyExpensesResponse {
-}
+data class MonthlyExpensesResponse(
+    val totalExpenses: Double,
+    val categories: Map<String, Double> = emptyMap()
+)

@@ -1,4 +1,8 @@
 package hampusborg.bankapp.application.dto.response
 
-class FinancialNewsResponse {
-}
+data class FinancialNewsResponse(
+    val title: String,
+    val description: String?,
+    val source: String,
+    val url: String
+)

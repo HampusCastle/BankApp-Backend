@@ -1,4 +1,9 @@
 package hampusborg.bankapp.application.dto.response
 
-class NotificationResponse {
-}
+data class NotificationResponse(
+    val id: String?,
+    val userId: String,
+    val message: String,
+    val timestamp: Long,
+    val type: String
+)

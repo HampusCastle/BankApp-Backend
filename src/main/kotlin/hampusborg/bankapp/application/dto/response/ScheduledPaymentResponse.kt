@@ -1,4 +1,7 @@
 package hampusborg.bankapp.application.dto.response
 
-class ScheduledPaymentResponse {
-}
+data class ScheduledPaymentResponse(
+    val message: String,
+    val paymentId: String? = null,
+    val amount: Double? = null
+)

@@ -1,4 +1,7 @@
 package hampusborg.bankapp.application.dto.response
 
-class SavingsProgressResponse {
-}
+data class SavingsProgressResponse(
+    val totalSaved: Double,
+    val savingsGoal: Double,
+    val progressPercentage: Double
+)

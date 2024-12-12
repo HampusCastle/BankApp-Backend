@@ -1,4 +1,5 @@
 package hampusborg.bankapp.application.dto.response
 
-class UserLoginResponse {
-}
+data class UserLoginResponse(
+    val token: String
+)

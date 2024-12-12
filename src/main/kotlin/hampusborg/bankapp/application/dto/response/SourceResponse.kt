@@ -1,4 +1,5 @@
 package hampusborg.bankapp.application.dto.response
 
-class SourceResponse {
-}
+data class SourceResponse(
+    val name: String
+)

@@ -1,4 +1,8 @@
 package hampusborg.bankapp.application.dto.response
 
-class MarketTrendsResponse {
-}
+data class MarketTrendsResponse(
+    val trend: String,
+    val price: String,
+    val volume: String,
+    val changePercent: String
+)

@@ -1,4 +1,5 @@
 package hampusborg.bankapp.application.dto.response
 
-class NewsApiResponse {
-}
+data class NewsApiResponse(
+    val articles: List<ArticleResponse>
+)

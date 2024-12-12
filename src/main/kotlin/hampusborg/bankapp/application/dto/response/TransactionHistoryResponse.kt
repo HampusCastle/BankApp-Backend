@@ -1,4 +1,5 @@
 package hampusborg.bankapp.application.dto.response
 
-class TransactionHistoryResponse {
-}
+data class TransactionHistoryResponse(
+    val history: String
+)

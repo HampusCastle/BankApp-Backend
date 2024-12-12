@@ -1,4 +1,9 @@
 package hampusborg.bankapp.application.dto.response
 
-class AccountResponse {
-}
+data class AccountResponse(
+    val id: String,
+    val name: String,
+    val balance: Double,
+    val accountType: String,
+    val userId: String,
+)

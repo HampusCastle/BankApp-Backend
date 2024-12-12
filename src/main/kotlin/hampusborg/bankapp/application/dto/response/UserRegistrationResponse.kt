@@ -1,4 +1,7 @@
 package hampusborg.bankapp.application.dto.response
 
-class UserRegistrationResponse {
-}
+data class UserRegistrationResponse(
+    val id: String,
+    val username: String,
+    val roles: List<String>
+)
