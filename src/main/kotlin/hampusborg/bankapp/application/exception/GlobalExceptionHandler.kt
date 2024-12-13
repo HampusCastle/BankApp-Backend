@@ -70,6 +70,12 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         return buildErrorResponse(HttpStatus.FORBIDDEN, ex.message)
     }
 
+    @ExceptionHandler(InvalidAccountException::class)
+    fun handleInvalidAccountException(ex: InvalidAccountException): ResponseEntity<ErrorResponse> {
+        log.error("Invalid account: {}", ex.message)
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.message)
+    }
+
     @ExceptionHandler(Exception::class)
     fun handleGeneralException(ex: Exception): ResponseEntity<ErrorResponse> {
         log.error("Unexpected error: {}", ex.message)

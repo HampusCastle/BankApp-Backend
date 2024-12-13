@@ -36,6 +36,7 @@ class SecurityConfig( private val jwtUtil: JwtUtil) {
             }
             .authorizeHttpRequests { authRequest ->
                 authRequest
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/auth/register", "/auth/login").permitAll()
                     .anyRequest().authenticated()
             }

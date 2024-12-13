@@ -3,15 +3,15 @@ package hampusborg.bankapp.application.service
 import hampusborg.bankapp.application.dto.request.NotificationRequest
 import hampusborg.bankapp.application.dto.request.TransferRequest
 import hampusborg.bankapp.application.dto.response.TransferResponse
+import hampusborg.bankapp.application.exception.classes.InsufficientFundsException
+import hampusborg.bankapp.application.exception.classes.InvalidAccountException
 import hampusborg.bankapp.core.domain.Transaction
 import hampusborg.bankapp.core.repository.AccountRepository
 import hampusborg.bankapp.core.repository.TransactionRepository
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
-@Service
-class TransferService(
+open class TransferService(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
     private val notificationService: NotificationService,
@@ -20,20 +20,21 @@ class TransferService(
     private val logger = LoggerFactory.getLogger(TransferService::class.java)
 
     @Transactional
-    fun transferFunds(transferRequest: TransferRequest, userId: String): TransferResponse {
+    open fun transferFunds(transferRequest: TransferRequest, userId: String): TransferResponse {
         logger.info("Initiating transfer for user $userId")
 
         val fromAccount = accountRepository.findById(transferRequest.fromAccountId)
-            .orElseThrow { RuntimeException("From account not found.") }
+            .orElseThrow { InvalidAccountException("From account not found.") }
+
         val toAccount = accountRepository.findById(transferRequest.toAccountId)
-            .orElseThrow { RuntimeException("To account not found.") }
+            .orElseThrow { InvalidAccountException("To account not found.") }
 
         if (fromAccount.userId != userId || toAccount.userId != userId) {
-            throw RuntimeException("Transfer failed: invalid accounts.")
+            throw InvalidAccountException("Transfer failed: invalid accounts.")
         }
 
         if (fromAccount.balance < transferRequest.amount) {
-            throw RuntimeException("Insufficient balance.")
+            throw InsufficientFundsException("Insufficient balance.")
         }
 
         fromAccount.balance -= transferRequest.amount

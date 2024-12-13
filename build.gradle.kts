@@ -44,6 +44,9 @@ dependencies {
     // Servlet API
     implementation("javax.servlet:javax.servlet-api:4.0.1")
 
+    // Swagger Impl
+    implementation ("io.springfox:springfox-boot-starter:3.0.0")
+
     // OpenAPI for API documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
