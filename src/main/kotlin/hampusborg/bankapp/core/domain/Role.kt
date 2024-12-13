@@ -1,4 +1,6 @@
 package hampusborg.bankapp.core.domain
 
-class Role {
+enum class Role(val authority: String) {
+    USER("ROLE_USER"),
+    ADMIN("ROLE_ADMIN")
 }

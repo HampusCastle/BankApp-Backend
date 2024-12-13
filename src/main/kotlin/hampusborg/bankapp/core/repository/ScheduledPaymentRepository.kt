@@ -1,4 +1,10 @@
 package hampusborg.bankapp.core.repository
 
-class ScheduledPaymentRepository {
+import hampusborg.bankapp.core.domain.ScheduledPayment
+import org.springframework.data.mongodb.repository.MongoRepository
+import org.springframework.stereotype.Repository
+
+@Repository
+interface ScheduledPaymentRepository : MongoRepository<ScheduledPayment, String> {
+    fun findByUserId(userId: String): List<ScheduledPayment>
 }
