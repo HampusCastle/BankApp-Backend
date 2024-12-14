@@ -5,7 +5,6 @@ import hampusborg.bankapp.application.dto.response.SavingsGoalDetailsResponse
 import hampusborg.bankapp.application.service.SavingsGoalService
 import hampusborg.bankapp.core.domain.SavingsGoal
 import jakarta.validation.Valid
-import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -14,18 +13,16 @@ import org.springframework.web.bind.annotation.*
 class SavingsGoalController(
     private val savingsGoalService: SavingsGoalService
 ) {
-    private val logger = LoggerFactory.getLogger(SavingsGoalController::class.java)
 
     @PostMapping
     fun createSavingsGoal(@Valid @RequestBody createSavingsGoalRequest: CreateSavingsGoalRequest): ResponseEntity<SavingsGoalDetailsResponse> {
-        logger.info("Creating savings goal: ${createSavingsGoalRequest.name} for user: ${createSavingsGoalRequest.userId}")
-
         val savingsGoal = SavingsGoal(
             name = createSavingsGoalRequest.name,
             userId = createSavingsGoalRequest.userId,
             targetAmount = createSavingsGoalRequest.targetAmount,
             targetDate = createSavingsGoalRequest.targetDate,
-            currentAmount = 0.0
+            currentAmount = 0.0,
+            accountId = createSavingsGoalRequest.accountId
         )
 
         val createdGoal = savingsGoalService.createSavingsGoal(savingsGoal)
@@ -43,7 +40,6 @@ class SavingsGoalController(
 
     @GetMapping("/{id}")
     fun getSavingsGoal(@PathVariable id: String): ResponseEntity<SavingsGoalDetailsResponse> {
-        logger.info("Fetching savings goal with ID: $id")
         val goal = savingsGoalService.getSavingsGoal(id)
         return ResponseEntity.ok(
             SavingsGoalDetailsResponse(
@@ -59,7 +55,6 @@ class SavingsGoalController(
 
     @GetMapping
     fun getSavingsGoalsByUserId(@RequestParam userId: String): ResponseEntity<List<SavingsGoalDetailsResponse>> {
-        logger.info("Fetching all savings goals for user: $userId")
         val goals = savingsGoalService.getSavingsGoalsByUserId(userId).map { goal ->
             SavingsGoalDetailsResponse(
                 id = goal.id!!,
@@ -78,14 +73,14 @@ class SavingsGoalController(
         @PathVariable id: String,
         @Valid @RequestBody createSavingsGoalRequest: CreateSavingsGoalRequest
     ): ResponseEntity<SavingsGoalDetailsResponse> {
-        logger.info("Updating savings goal with ID: $id")
         val updatedGoal = savingsGoalService.updateSavingsGoal(id, SavingsGoal(
             id = id,
             name = createSavingsGoalRequest.name,
             userId = createSavingsGoalRequest.userId,
             targetAmount = createSavingsGoalRequest.targetAmount,
             targetDate = createSavingsGoalRequest.targetDate,
-            currentAmount = 0.0
+            currentAmount = 0.0,
+            accountId = createSavingsGoalRequest.accountId
         ))
 
         return ResponseEntity.ok(
@@ -102,7 +97,6 @@ class SavingsGoalController(
 
     @DeleteMapping("/{id}")
     fun deleteSavingsGoal(@PathVariable id: String): ResponseEntity<Void> {
-        logger.info("Deleting savings goal with ID: $id")
         savingsGoalService.deleteSavingsGoal(id)
         return ResponseEntity.noContent().build()
     }

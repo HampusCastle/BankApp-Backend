@@ -2,7 +2,7 @@ package hampusborg.bankapp.presentation.controller
 
 import hampusborg.bankapp.application.dto.request.GenerateQRCodeRequest
 import hampusborg.bankapp.application.dto.response.GeneratedQRCodeResponse
-import hampusborg.bankapp.application.service.QRCodeService
+import hampusborg.bankapp.application.service.base.QRCodeService
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping

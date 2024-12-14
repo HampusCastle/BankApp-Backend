@@ -17,12 +17,13 @@ class ActivityLogController(
     @GetMapping("/my-logs")
     fun getMyActivityLogs(@RequestHeader("Authorization") token: String): ResponseEntity<List<UserActivityLog>> {
         val userId = jwtUtil.extractUserDetails(token.substringAfter(" "))?.first
-        return if (userId != null) {
-            val logs = activityLogService.getLogsByUserId(userId)
-            ResponseEntity.ok(logs)
-        } else {
-            ResponseEntity.badRequest().body(emptyList())
+
+        if (userId == null) {
+            return ResponseEntity.badRequest().body(emptyList())
         }
+
+        val logs = activityLogService.getLogsByUserId(userId)
+        return ResponseEntity.ok(logs)
     }
 
     @PreAuthorize("hasRole('ADMIN')")

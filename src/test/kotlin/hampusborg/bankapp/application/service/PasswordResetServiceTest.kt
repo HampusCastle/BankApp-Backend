@@ -1,6 +1,7 @@
 package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.application.dto.PasswordResetToken
+import hampusborg.bankapp.application.service.base.PasswordResetService
 import hampusborg.bankapp.core.domain.User
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*

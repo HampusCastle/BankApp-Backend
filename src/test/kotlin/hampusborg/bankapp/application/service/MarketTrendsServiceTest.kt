@@ -110,7 +110,7 @@ class MarketTrendsServiceTest {
             marketTrendsService.getMarketTrends(GetMarketTrendsRequest(symbol = "SPY"))
         }
 
-        assertEquals("API error", exception.message)
+        assertEquals("Failed to fetch market trends: API error", exception.message)
     }
 
     @Test
@@ -123,6 +123,6 @@ class MarketTrendsServiceTest {
             marketTrendsService.getMarketTrends(GetMarketTrendsRequest(symbol = "SPY"))
         }
 
-        assertEquals("Failed to fetch market trends: Missing 'Global Quote' data in the API response", exception.message)
+        assertEquals("Missing 'Global Quote' data in the API response", exception.message)
     }
 }

@@ -37,9 +37,7 @@ class AuthenticationController(
     fun login(@Valid @RequestBody authenticateUserRequest: AuthenticateUserRequest): ResponseEntity<AuthenticateUserResponse> {
         return try {
             val token = authenticationService.loginUser(authenticateUserRequest)
-
             val response = AuthenticateUserResponse(token)
-
             ResponseEntity.ok(response)
         } catch (e: RuntimeException) {
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AuthenticateUserResponse("Invalid username or password"))

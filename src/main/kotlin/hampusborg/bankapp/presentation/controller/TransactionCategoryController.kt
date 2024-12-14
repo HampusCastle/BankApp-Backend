@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*
 class TransactionCategoryController(
     private val transactionCategoryService: TransactionCategoryService
 ) {
-
     @PostMapping
     fun createCategory(
         @RequestParam @NotEmpty name: String,

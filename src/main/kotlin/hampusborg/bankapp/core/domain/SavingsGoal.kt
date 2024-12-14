@@ -12,5 +12,6 @@ data class SavingsGoal(
     val userId: String,
     var targetAmount: Double,
     val targetDate: LocalDate,
-    var currentAmount: Double = 0.0
+    var currentAmount: Double = 0.0,
+    val accountId: String,
 )

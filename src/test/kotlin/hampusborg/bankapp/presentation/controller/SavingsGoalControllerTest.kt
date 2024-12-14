@@ -44,7 +44,8 @@ class SavingsGoalControllerTest {
             name = "Vacation Fund",
             userId = "user123",
             targetAmount = 5000.0,
-            targetDate = LocalDate.of(2025, 1, 1)
+            targetDate = LocalDate.of(2025, 1, 1),
+            accountId = "123"
         )
         val response = SavingsGoalDetailsResponse(
             id = "goal123",
@@ -62,7 +63,8 @@ class SavingsGoalControllerTest {
                 userId = response.userId,
                 targetAmount = response.targetAmount,
                 targetDate = response.targetDate,
-                currentAmount = response.currentAmount
+                currentAmount = response.currentAmount,
+                accountId = "123"
             )
         )
 
@@ -94,7 +96,8 @@ class SavingsGoalControllerTest {
                 userId = response.userId,
                 targetAmount = response.targetAmount,
                 targetDate = response.targetDate,
-                currentAmount = response.currentAmount
+                currentAmount = response.currentAmount,
+                accountId = "123"
             )
         )
 
@@ -111,7 +114,8 @@ class SavingsGoalControllerTest {
             name = "",
             userId = "",
             targetAmount = -1000.0,
-            targetDate = LocalDate.of(2020, 1, 1)
+            targetDate = LocalDate.of(2020, 1, 1),
+            accountId = "123"
         )
 
         mockMvc.perform(
@@ -140,8 +144,8 @@ class SavingsGoalControllerTest {
     @Test
     fun `should fetch all savings goals for a user`() {
         val savingsGoals = listOf(
-            SavingsGoal("goal1", "Goal 1", "user123", 1000.0, LocalDate.of(2025, 1, 1), 200.0),
-            SavingsGoal("goal2", "Goal 2", "user123", 5000.0, LocalDate.of(2026, 1, 1), 1000.0)
+            SavingsGoal("goal1", "Goal 1", "user123", 1000.0, LocalDate.of(2025, 1, 1), 200.0, accountId = "123"),
+            SavingsGoal("goal2", "Goal 2", "user123", 5000.0, LocalDate.of(2026, 1, 1), 1000.0, accountId = "123")
         )
 
         whenever(savingsGoalService.getSavingsGoalsByUserId("user123")).thenReturn(savingsGoals)
@@ -159,7 +163,8 @@ class SavingsGoalControllerTest {
             name = "Updated Goal",
             userId = "user123",
             targetAmount = 6000.0,
-            targetDate = LocalDate.of(2025, 12, 31)
+            targetDate = LocalDate.of(2025, 12, 31),
+            accountId = "123"
         )
         val updatedResponse = SavingsGoalDetailsResponse(
             id = "goal123",
@@ -177,7 +182,8 @@ class SavingsGoalControllerTest {
                 userId = updatedResponse.userId,
                 targetAmount = updatedResponse.targetAmount,
                 targetDate = updatedResponse.targetDate,
-                currentAmount = updatedResponse.currentAmount
+                currentAmount = updatedResponse.currentAmount,
+                accountId = "123"
             )
         )
 

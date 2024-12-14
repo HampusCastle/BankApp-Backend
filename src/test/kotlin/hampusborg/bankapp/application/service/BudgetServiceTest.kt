@@ -46,7 +46,8 @@ class BudgetServiceTest {
             name = "Vacation",
             targetAmount = 5000.0,
             targetDate = LocalDate.now(),
-            currentAmount = 1000.0
+            currentAmount = 1000.0,
+            accountId = "123"
         )
 
         whenever(savingsGoalRepository.findById(savingsGoalId)).thenReturn(Optional.of(savingsGoal))

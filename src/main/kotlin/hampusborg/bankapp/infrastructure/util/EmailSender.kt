@@ -1,6 +1,6 @@
 package hampusborg.bankapp.infrastructure.util
 
-import hampusborg.bankapp.infrastructure.service.EmailService
+import hampusborg.bankapp.application.service.EmailService
 import org.springframework.stereotype.Component
 
 @Component

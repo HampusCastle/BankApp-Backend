@@ -1,4 +1,4 @@
-package hampusborg.bankapp.application.service
+package hampusborg.bankapp.application.service.base
 
 import hampusborg.bankapp.application.dto.request.GenerateQRCodeRequest
 import hampusborg.bankapp.application.dto.response.GeneratedQRCodeResponse

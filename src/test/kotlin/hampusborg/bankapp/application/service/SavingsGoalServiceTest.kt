@@ -1,5 +1,6 @@
 package hampusborg.bankapp.application.service
 import hampusborg.bankapp.application.exception.classes.SavingsGoalNotFoundException
+import hampusborg.bankapp.application.service.base.PaymentService
 import hampusborg.bankapp.core.domain.SavingsGoal
 import hampusborg.bankapp.core.repository.SavingsGoalRepository
 import org.junit.jupiter.api.Test
@@ -13,7 +14,9 @@ import java.util.*
 class SavingsGoalServiceTest {
 
     private val savingsGoalRepository: SavingsGoalRepository = mock()
-    private val savingsGoalService = SavingsGoalService(savingsGoalRepository)
+    private val paymentService: PaymentService = mock()
+    private val savingsGoalService = SavingsGoalService(savingsGoalRepository, paymentService)  // Inject mocked dependencies
+
 
     @Test
     fun `should create a savings goal successfully`() {
@@ -21,7 +24,8 @@ class SavingsGoalServiceTest {
             name = "Emergency Fund",
             userId = "user123",
             targetAmount = 1000.0,
-            targetDate = LocalDate.now().plusMonths(6)
+            targetDate = LocalDate.now().plusMonths(6),
+            accountId = "123"
         )
         whenever(savingsGoalRepository.save(any<SavingsGoal>())).thenReturn(savingsGoal)
 
@@ -51,7 +55,8 @@ class SavingsGoalServiceTest {
             userId = "user123",
             targetAmount = 1000.0,
             targetDate = LocalDate.now().plusMonths(6),
-            currentAmount = 200.0
+            currentAmount = 200.0,
+            accountId = "123"
         )
         val updatedGoal = SavingsGoal(
             id = goalId,
@@ -59,7 +64,8 @@ class SavingsGoalServiceTest {
             userId = "user123",
             targetAmount = 1000.0,
             targetDate = LocalDate.now().plusMonths(6),
-            currentAmount = 500.0
+            currentAmount = 500.0,
+            accountId = "123"
         )
 
         whenever(savingsGoalRepository.findById(goalId)).thenReturn(Optional.of(existingGoal))
@@ -74,7 +80,7 @@ class SavingsGoalServiceTest {
     @Test
     fun `should throw SavingsGoalNotFoundException when updating non-existent goal`() {
         val goalId = "nonexistent-id"
-        val savingsGoal = SavingsGoal(name = "Emergency Fund", userId = "user123", targetAmount = 1000.0, targetDate = LocalDate.now().plusMonths(6))
+        val savingsGoal = SavingsGoal(name = "Emergency Fund", userId = "user123", targetAmount = 1000.0, accountId = "123", targetDate = LocalDate.now().plusMonths(6))
 
         whenever(savingsGoalRepository.findById(goalId)).thenReturn(Optional.empty())
 
@@ -91,7 +97,8 @@ class SavingsGoalServiceTest {
             name = "Emergency Fund",
             userId = "user123",
             targetAmount = 1000.0,
-            targetDate = LocalDate.now().plusMonths(6)
+            targetDate = LocalDate.now().plusMonths(6),
+            accountId = "123"
         )
         whenever(savingsGoalRepository.findById(goalId)).thenReturn(Optional.of(goal))
 

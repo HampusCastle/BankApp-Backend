@@ -47,12 +47,23 @@ dependencies {
     // Swagger Impl
     implementation ("io.springfox:springfox-boot-starter:3.0.0")
 
+    //AOP Dependency for logging
+    implementation ("org.springframework.boot:spring-boot-starter-aop")
+
     // OpenAPI for API documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+
+    // RateLimiting
+    implementation("io.github.resilience4j:resilience4j-ratelimiter:1.7.1")
+    implementation("io.github.resilience4j:resilience4j-spring-boot2:1.7.1")
 
     // Lombok for reducing boilerplate code
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
+
+    // Caching
+    implementation("org.springframework.boot:spring-boot-starter-cache")
+    implementation("org.springframework.cache:spring-cache")
 
     // Testing dependencies
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")

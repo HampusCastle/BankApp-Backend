@@ -5,21 +5,21 @@ import hampusborg.bankapp.application.dto.response.SavingsProgressSummaryRespons
 import hampusborg.bankapp.application.service.BudgetService
 import jakarta.validation.constraints.NotEmpty
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/budget-reports")
 class BudgetController(
     private val budgetService: BudgetService
 ) {
-
     @GetMapping("/expenses/{userId}")
     fun getMonthlyExpenses(@PathVariable @NotEmpty userId: String): ResponseEntity<ExpensesSummaryResponse> {
-        val totalExpenses = budgetService.getMonthlyExpenses(userId)
-        return ResponseEntity.ok(totalExpenses)
+        return try {
+            val totalExpenses = budgetService.getMonthlyExpenses(userId)
+            ResponseEntity.ok(totalExpenses)
+        } catch (e: Exception) {
+            throw e
+        }
     }
 
     @GetMapping("/savings-progress/{userId}/{savingsGoalId}")
@@ -27,7 +27,11 @@ class BudgetController(
         @PathVariable @NotEmpty userId: String,
         @PathVariable @NotEmpty savingsGoalId: String
     ): ResponseEntity<SavingsProgressSummaryResponse> {
-        val progress = budgetService.getSavingsProgress(userId, savingsGoalId)
-        return ResponseEntity.ok(progress)
+        return try {
+            val progress = budgetService.getSavingsProgress(userId, savingsGoalId)
+            ResponseEntity.ok(progress)
+        } catch (e: Exception) {
+            throw e
+        }
     }
 }

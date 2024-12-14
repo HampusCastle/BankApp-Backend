@@ -1,8 +1,7 @@
 package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.core.repository.AccountRepository
-import hampusborg.bankapp.core.utility.InterestCalculator
-import org.slf4j.LoggerFactory
+import hampusborg.bankapp.core.util.InterestCalculator
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
@@ -10,16 +9,11 @@ import org.springframework.stereotype.Service
 class InterestService(
     private val accountRepository: AccountRepository
 ) {
-    private val logger = LoggerFactory.getLogger(InterestService::class.java)
-
     @Scheduled(cron = "0 0 1 * * ?")
     fun applyInterest() {
         val savingsAccounts = accountRepository.findByAccountType("Savings")
-        logger.info("Applying interest to ${savingsAccounts.size} savings accounts.")
 
-        if (savingsAccounts.isEmpty()) {
-            logger.info("No savings accounts found for interest application.")
-        }
+        if (savingsAccounts.isEmpty()) return
 
         savingsAccounts.forEach { account ->
             try {
@@ -27,12 +21,8 @@ class InterestService(
                 if (interest > 0) {
                     account.balance += interest
                     accountRepository.save(account)
-                    logger.info("Applied interest of $interest to account ${account.id}. New balance: ${account.balance}.")
-                } else {
-                    logger.warn("No interest applied for account ${account.id} (interest rate is zero or null).")
                 }
             } catch (e: Exception) {
-                logger.error("Failed to apply interest for account ${account.id}: ${e.message}")
             }
         }
     }

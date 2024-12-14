@@ -11,7 +11,6 @@ class ChatbotController(
     private val chatbotService: ChatbotService,
     private val jwtUtil: JwtUtil
 ) {
-
     @PostMapping("/query")
     fun handleChatbotQuery(
         @RequestBody query: String,

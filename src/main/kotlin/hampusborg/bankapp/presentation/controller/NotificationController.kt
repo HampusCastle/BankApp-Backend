@@ -13,10 +13,10 @@ class NotificationController(
     private val notificationService: NotificationService,
     private val jwtUtil: JwtUtil
 ) {
-
     @GetMapping
     fun getNotifications(@RequestHeader("Authorization") token: String): ResponseEntity<List<NotificationDetailsResponse>> {
         val userId = extractUserIdFromToken(token)
+
         return if (userId != null) {
             val notifications = notificationService.getUserNotifications(userId).map { notification ->
                 NotificationDetailsResponse(

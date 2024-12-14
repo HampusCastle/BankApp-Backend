@@ -1,4 +1,4 @@
-package hampusborg.bankapp.core.utility
+package hampusborg.bankapp.core.util
 
 object InterestCalculator {
     fun calculateInterest(balance: Double, interestRate: Double?): Double {

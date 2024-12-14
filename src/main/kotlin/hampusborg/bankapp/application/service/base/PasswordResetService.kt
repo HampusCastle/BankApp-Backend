@@ -1,7 +1,8 @@
-package hampusborg.bankapp.application.service
+package hampusborg.bankapp.application.service.base
 
 import hampusborg.bankapp.application.dto.PasswordResetToken
 import hampusborg.bankapp.application.dto.request.UpdateUserProfileRequest
+import hampusborg.bankapp.application.service.UserService
 import hampusborg.bankapp.core.domain.User
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.mail.javamail.JavaMailSender
@@ -25,7 +26,11 @@ class PasswordResetService(
         message.setSubject("Password Reset Request")
         message.setText("Click the link below to reset your password: \n$resetLink")
 
-        mailSender.send(message)
+        try {
+            mailSender.send(message)
+        } catch (e: Exception) {
+            throw Exception("Failed to send password reset email", e)
+        }
     }
 
     fun generateResetToken(user: User): PasswordResetToken {
@@ -51,7 +56,11 @@ class PasswordResetService(
             password = newPassword
         )
 
-        userService.updateUser(userId, updateRequest)
+        try {
+            userService.updateUser(userId, updateRequest)
+        } catch (e: Exception) {
+            throw Exception("Failed to reset password", e)
+        }
     }
 
     private fun retrieveTokenFromStorage(token: String): PasswordResetToken? {

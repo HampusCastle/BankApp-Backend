@@ -11,14 +11,14 @@ class NotificationService(
     private val notificationRepository: NotificationRepository
 ) {
     fun createNotification(request: SendNotificationRequest): Notification {
-        try {
+        return try {
             val notification = Notification(
                 userId = request.userId,
                 message = request.message,
                 timestamp = System.currentTimeMillis(),
                 type = request.type
             )
-            return notificationRepository.save(notification)
+            notificationRepository.save(notification)
         } catch (e: Exception) {
             throw NotificationCreationException("Failed to create notification: ${e.message}")
         }

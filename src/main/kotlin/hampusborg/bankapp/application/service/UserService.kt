@@ -2,20 +2,24 @@ package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.application.dto.request.UpdateUserProfileRequest
 import hampusborg.bankapp.application.exception.classes.UserNotFoundException
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.User
 import hampusborg.bankapp.core.repository.UserRepository
-import org.slf4j.LoggerFactory
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
 @Service
 class UserService(
     private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val rateLimiterService: RateLimiterService
 ) {
-    private val logger = LoggerFactory.getLogger(UserService::class.java)
-
     fun updateUser(userId: String, updateUserProfileRequest: UpdateUserProfileRequest): User {
+        if (!rateLimiterService.isAllowed(userId)) {
+            throw Exception("Too many requests, please try again later.")
+        }
+
         val user = userRepository.findById(userId).orElseThrow {
             UserNotFoundException("User not found with id: $userId")
         }
@@ -30,10 +34,14 @@ class UserService(
         return userRepository.save(user)
     }
 
+    @Cacheable(value = ["userCache"], key = "#userId")
     fun getUserById(userId: String): User {
-        logger.info("Fetching user by id: $userId")
+        if (!rateLimiterService.isAllowed(userId)) {
+            throw Exception("Too many requests, please try again later.")
+        }
+
         return userRepository.findById(userId).orElseThrow {
-            throw UserNotFoundException("User not found with id: $userId")
+            UserNotFoundException("User not found with id: $userId")
         }
     }
 }
