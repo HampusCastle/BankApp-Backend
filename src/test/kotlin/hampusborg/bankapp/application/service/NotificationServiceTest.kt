@@ -1,6 +1,6 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.NotificationRequest
+import hampusborg.bankapp.application.dto.request.SendNotificationRequest
 import hampusborg.bankapp.application.exception.classes.NotificationCreationException
 import hampusborg.bankapp.core.domain.Notification
 import hampusborg.bankapp.core.repository.NotificationRepository
@@ -21,7 +21,7 @@ class NotificationServiceTest {
         val message = "Your payment was successful"
         val type = "payment_success"
 
-        val notificationRequest = NotificationRequest(
+        val sendNotificationRequest = SendNotificationRequest(
             userId = userId,
             message = message,
             type = type
@@ -40,7 +40,7 @@ class NotificationServiceTest {
             arg.copy(id = notification.id)
         }
 
-        val result = notificationService.createNotification(notificationRequest)
+        val result = notificationService.createNotification(sendNotificationRequest)
 
         assertTrue(result.id != null)
         assertEquals("generated-id-123", result.id)
@@ -56,7 +56,7 @@ class NotificationServiceTest {
         val message = "Test message"
         val type = "test_type"
 
-        val notificationRequest = NotificationRequest(
+        val sendNotificationRequest = SendNotificationRequest(
             userId = userId,
             message = message,
             type = type
@@ -65,7 +65,7 @@ class NotificationServiceTest {
         whenever(notificationRepository.save(any<Notification>())).thenThrow(RuntimeException("DB error"))
 
         val exception = assertFailsWith<NotificationCreationException> {
-            notificationService.createNotification(notificationRequest)
+            notificationService.createNotification(sendNotificationRequest)
         }
 
         assertEquals("Failed to create notification: DB error", exception.message)

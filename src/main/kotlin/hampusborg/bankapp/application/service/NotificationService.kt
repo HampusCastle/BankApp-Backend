@@ -1,6 +1,6 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.NotificationRequest
+import hampusborg.bankapp.application.dto.request.SendNotificationRequest
 import hampusborg.bankapp.application.exception.classes.NotificationCreationException
 import hampusborg.bankapp.core.domain.Notification
 import hampusborg.bankapp.core.repository.NotificationRepository
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service
 class NotificationService(
     private val notificationRepository: NotificationRepository
 ) {
-    fun createNotification(request: NotificationRequest): Notification {
+    fun createNotification(request: SendNotificationRequest): Notification {
         try {
             val notification = Notification(
                 userId = request.userId,

@@ -1,6 +1,6 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.AccountRequest
+import hampusborg.bankapp.application.dto.request.CreateAccountRequest
 import hampusborg.bankapp.application.exception.classes.AccountNotFoundException
 import hampusborg.bankapp.core.domain.Account
 import hampusborg.bankapp.core.repository.AccountRepository
@@ -13,18 +13,18 @@ import kotlin.test.assertEquals
 class AccountServiceTest {
 
     private val accountRepository: AccountRepository = mock(AccountRepository::class.java)
-    private val userActivityLogService: UserActivityLogService = mock(UserActivityLogService::class.java)
+    private val activityLogService: ActivityLogService = mock(ActivityLogService::class.java)
 
-    private val accountService = AccountService(accountRepository, userActivityLogService)
+    private val accountService = AccountService(accountRepository, activityLogService)
 
     @Test
     fun `createAccount should save the account`() {
-        val accountRequest = AccountRequest(accountType = "Checking", balance = 1000.0, name = "Checking", userId = "user-id")
+        val createAccountRequest = CreateAccountRequest(accountType = "Checking", balance = 1000.0, name = "Checking", userId = "user-id")
         val account = Account(userId = "user-id", accountType = "Checking", balance = 1000.0, interestRate = null, id = "generated-id")
 
         `when`(accountRepository.save(any())).thenReturn(account)
 
-        val savedAccount = accountService.createAccount(accountRequest, "user-id")
+        val savedAccount = accountService.createAccount(createAccountRequest, "user-id")
 
         assertEquals("generated-id", savedAccount.id)
         assertEquals(1000.0, savedAccount.balance)
@@ -61,12 +61,12 @@ class AccountServiceTest {
 
     @Test
     fun `createAccount should return bad request when invalid account data is provided`() {
-        val accountRequest = AccountRequest(accountType = "", balance = -1000.0, name = "", userId = "user-id")
+        val createAccountRequest = CreateAccountRequest(accountType = "", balance = -1000.0, name = "", userId = "user-id")
 
         `when`(accountRepository.save(any())).thenThrow(IllegalArgumentException("Invalid account data"))
 
         try {
-            accountService.createAccount(accountRequest, "user-id")
+            accountService.createAccount(createAccountRequest, "user-id")
         } catch (e: IllegalArgumentException) {
             assertEquals("Invalid account data", e.message)
         }

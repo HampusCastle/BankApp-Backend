@@ -1,7 +1,7 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.AccountRequest
-import hampusborg.bankapp.application.dto.response.AccountResponse
+import hampusborg.bankapp.application.dto.request.CreateAccountRequest
+import hampusborg.bankapp.application.dto.response.AccountDetailsResponse
 import hampusborg.bankapp.application.exception.classes.AccountNotActiveException
 import hampusborg.bankapp.application.exception.classes.AccountNotFoundException
 import hampusborg.bankapp.core.domain.Account
@@ -12,23 +12,23 @@ import org.springframework.stereotype.Service
 @Service
 class AccountService(
     private val accountRepository: AccountRepository,
-    private val userActivityLogService: UserActivityLogService
+    private val activityLogService: ActivityLogService
 ) {
     private val logger = LoggerFactory.getLogger(AccountService::class.java)
 
-    fun createAccount(accountRequest: AccountRequest, userId: String): AccountResponse {
-        logger.info("Creating account for userId: $userId with accountType: ${accountRequest.accountType} and balance: ${accountRequest.balance}")
+    fun createAccount(createAccountRequest: CreateAccountRequest, userId: String): AccountDetailsResponse {
+        logger.info("Creating account for userId: $userId with accountType: ${createAccountRequest.accountType} and balance: ${createAccountRequest.balance}")
         val account = Account(
             userId = userId,
-            balance = accountRequest.balance,
-            accountType = accountRequest.accountType
+            balance = createAccountRequest.balance,
+            accountType = createAccountRequest.accountType
         )
 
-        userActivityLogService.logActivity(userId, "Account created", "Account Type: ${accountRequest.accountType}, Balance: ${accountRequest.balance}")
+        activityLogService.logActivity(userId, "Account created", "Account Type: ${createAccountRequest.accountType}, Balance: ${createAccountRequest.balance}")
         val savedAccount = accountRepository.save(account)
         logger.info("Account created successfully: ${savedAccount.id}")
 
-        return AccountResponse(
+        return AccountDetailsResponse(
             id = savedAccount.id!!,
             name = savedAccount.accountType,
             balance = savedAccount.balance,
@@ -37,10 +37,10 @@ class AccountService(
         )
     }
 
-    fun getAccountsByUserId(userId: String): List<AccountResponse> {
+    fun getAccountsByUserId(userId: String): List<AccountDetailsResponse> {
         logger.info("Fetching accounts for userId: $userId")
         return accountRepository.findByUserId(userId).map { account ->
-            AccountResponse(
+            AccountDetailsResponse(
                 id = account.id!!,
                 name = account.accountType,
                 balance = account.balance,

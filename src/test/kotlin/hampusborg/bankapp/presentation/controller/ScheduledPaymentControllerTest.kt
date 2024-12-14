@@ -1,12 +1,11 @@
 package hampusborg.bankapp.presentation.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import hampusborg.bankapp.application.dto.request.ScheduledPaymentRequest
+import hampusborg.bankapp.application.dto.request.CreateScheduledPaymentRequest
 import hampusborg.bankapp.application.service.ScheduledPaymentService
 import hampusborg.bankapp.core.domain.ScheduledPayment
 import hampusborg.bankapp.infrastructure.config.SecurityConfig
 import hampusborg.bankapp.infrastructure.util.JwtUtil
-import hampusborg.bankapp.presentation.controller.ScheduledPaymentController
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
@@ -51,7 +50,7 @@ class ScheduledPaymentControllerTest {
 
     @Test
     fun `should create scheduled payment successfully`() {
-        val request = ScheduledPaymentRequest(
+        val request = CreateScheduledPaymentRequest(
             fromAccountId = "fromAccount",
             toAccountId = "toAccount",
             amount = 100.0,
@@ -84,7 +83,7 @@ class ScheduledPaymentControllerTest {
 
     @Test
     fun `should update scheduled payment successfully`() {
-        val request = ScheduledPaymentRequest(
+        val request = CreateScheduledPaymentRequest(
             fromAccountId = "fromAccount",
             toAccountId = "toAccount",
             amount = 200.0,
@@ -122,7 +121,7 @@ class ScheduledPaymentControllerTest {
 
     @Test
     fun `should handle bad request when invalid data is provided`() {
-        val invalidRequest = ScheduledPaymentRequest(
+        val invalidRequest = CreateScheduledPaymentRequest(
             fromAccountId = "",
             toAccountId = "",
             amount = 0.0,
@@ -142,7 +141,7 @@ class ScheduledPaymentControllerTest {
 
     @Test
     fun `should handle unauthorized request without token`() {
-        val request = ScheduledPaymentRequest(
+        val request = CreateScheduledPaymentRequest(
             fromAccountId = "fromAccount",
             toAccountId = "toAccount",
             amount = 100.0,

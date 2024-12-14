@@ -1,10 +1,10 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.FinancialNewsRequest
-import hampusborg.bankapp.application.dto.request.MarketTrendsRequest
-import hampusborg.bankapp.application.dto.response.MarketTrendsResponse
-import hampusborg.bankapp.application.dto.response.ScheduledPaymentResponse
-import hampusborg.bankapp.application.dto.response.TransactionHistoryResponse
+import hampusborg.bankapp.application.dto.request.FetchFinancialNewsRequest
+import hampusborg.bankapp.application.dto.request.GetMarketTrendsRequest
+import hampusborg.bankapp.application.dto.response.MarketTrendsDetailsResponse
+import hampusborg.bankapp.application.dto.response.ScheduledPaymentDetailsResponse
+import hampusborg.bankapp.application.dto.response.TransactionHistoryDetailsResponse
 import hampusborg.bankapp.core.repository.AccountRepository
 import hampusborg.bankapp.core.repository.ScheduledPaymentRepository
 import hampusborg.bankapp.core.repository.TransactionRepository
@@ -22,21 +22,21 @@ class ChatbotService(
 
     private val logger = LoggerFactory.getLogger(ChatbotService::class.java)
 
-    fun getTransactionHistory(userId: String): TransactionHistoryResponse {
+    fun getTransactionHistory(userId: String): TransactionHistoryDetailsResponse {
         logger.info("Fetching transaction history for user: $userId")
         val transactions = transactionRepository.findByFromAccountId(userId) + transactionRepository.findByToAccountId(userId)
         val history = transactions.joinToString("\n") { "Från: ${it.fromAccountId}, Till: ${it.toAccountId}, Belopp: ${it.amount} SEK" }
         logger.info("Transaction history for user $userId: $history")
-        return TransactionHistoryResponse(history.ifEmpty { "Du har inga överföringar ännu." })
+        return TransactionHistoryDetailsResponse(history.ifEmpty { "Du har inga överföringar ännu." })
     }
 
-    fun getMarketTrends(userId: String): MarketTrendsResponse {
+    fun getMarketTrends(userId: String): MarketTrendsDetailsResponse {
         logger.info("Fetching market trends for user: $userId")
 
-        val marketTrendsRequest = MarketTrendsRequest(symbol = "AAPL")
-        val marketTrends = marketTrendsService.getMarketTrends(marketTrendsRequest)
+        val getMarketTrendsRequest = GetMarketTrendsRequest(symbol = "AAPL")
+        val marketTrends = marketTrendsService.getMarketTrends(getMarketTrendsRequest)
 
-        return MarketTrendsResponse(
+        return MarketTrendsDetailsResponse(
             trend = marketTrends.trend,
             price = marketTrends.price,
             volume = marketTrends.volume,
@@ -44,11 +44,11 @@ class ChatbotService(
         )
     }
 
-    fun getScheduledPayments(userId: String): ScheduledPaymentResponse {
+    fun getScheduledPayments(userId: String): ScheduledPaymentDetailsResponse {
         logger.info("Fetching scheduled payments for user: $userId")
         val payments = scheduledPaymentRepository.findByUserId(userId)
         val scheduledPayments = payments.joinToString("\n") { "Betalning till: ${it.toAccountId}, Belopp: ${it.amount}, Nästa betalning: ${it.nextPaymentDate}" }
-        return ScheduledPaymentResponse(scheduledPayments.ifEmpty { "Du har inga planerade betalningar." })
+        return ScheduledPaymentDetailsResponse(scheduledPayments.ifEmpty { "Du har inga planerade betalningar." })
     }
 
     fun getAccountInfo(userId: String): String {
@@ -60,7 +60,7 @@ class ChatbotService(
 
     fun getFinancialNews(): String {
         logger.info("Fetching financial news")
-        val newsRequest = FinancialNewsRequest(page = 1, pageSize = 5, category = "business")
+        val newsRequest = FetchFinancialNewsRequest(page = 1, pageSize = 5, category = "business")
         val news = financialNewsService.getFinancialNews(newsRequest)
         return news.joinToString("\n") {
             "Titel: ${it.title}\nBeskrivning: ${it.description}\nKälla: ${it.source}\nLäs mer: ${it.url}"

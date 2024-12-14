@@ -1,6 +1,6 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.TransferRequest
+import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
 import hampusborg.bankapp.core.repository.TransactionCategoryRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 class ScheduledPaymentProcessor(
     private val scheduledPaymentService: ScheduledPaymentService,
     private val transferService: TransferService,
-    private val userActivityLogService: UserActivityLogService,
+    private val activityLogService: ActivityLogService,
     private val transactionCategoryRepository: TransactionCategoryRepository
 ) {
     fun processScheduledPayments(currentTime: Long = System.currentTimeMillis()) {
@@ -27,15 +27,15 @@ class ScheduledPaymentProcessor(
                 val categoryId = payment.categoryId ?: transactionCategoryRepository.findByName("Default")?.id
                 ?: "default-category-id"
 
-                val transferRequest = TransferRequest(
+                val initiateTransferRequest = InitiateTransferRequest(
                     fromAccountId = payment.fromAccountId,
                     toAccountId = payment.toAccountId,
                     amount = payment.amount,
                     categoryId = categoryId
                 )
-                transferService.transferFunds(transferRequest, payment.userId)
+                transferService.transferFunds(initiateTransferRequest, payment.userId)
 
-                userActivityLogService.logActivity(
+                activityLogService.logActivity(
                     payment.userId,
                     "Scheduled payment processed",
                     "Transferred ${payment.amount} from ${payment.fromAccountId} to ${payment.toAccountId}."

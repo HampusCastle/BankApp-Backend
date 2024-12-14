@@ -1,8 +1,8 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.NotificationRequest
-import hampusborg.bankapp.application.dto.request.TransferRequest
-import hampusborg.bankapp.application.dto.response.TransferResponse
+import hampusborg.bankapp.application.dto.request.SendNotificationRequest
+import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
+import hampusborg.bankapp.application.dto.response.TransferStatusResponse
 import hampusborg.bankapp.application.exception.classes.InsufficientFundsException
 import hampusborg.bankapp.application.exception.classes.InvalidAccountException
 import hampusborg.bankapp.core.domain.Transaction
@@ -15,59 +15,59 @@ open class TransferService(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
     private val notificationService: NotificationService,
-    private val userActivityLogService: UserActivityLogService
+    private val activityLogService: ActivityLogService
 ) {
     private val logger = LoggerFactory.getLogger(TransferService::class.java)
 
     @Transactional
-    open fun transferFunds(transferRequest: TransferRequest, userId: String): TransferResponse {
+    open fun transferFunds(initiateTransferRequest: InitiateTransferRequest, userId: String): TransferStatusResponse {
         logger.info("Initiating transfer for user $userId")
 
-        val fromAccount = accountRepository.findById(transferRequest.fromAccountId)
+        val fromAccount = accountRepository.findById(initiateTransferRequest.fromAccountId)
             .orElseThrow { InvalidAccountException("From account not found.") }
 
-        val toAccount = accountRepository.findById(transferRequest.toAccountId)
+        val toAccount = accountRepository.findById(initiateTransferRequest.toAccountId)
             .orElseThrow { InvalidAccountException("To account not found.") }
 
         if (fromAccount.userId != userId || toAccount.userId != userId) {
             throw InvalidAccountException("Transfer failed: invalid accounts.")
         }
 
-        if (fromAccount.balance < transferRequest.amount) {
+        if (fromAccount.balance < initiateTransferRequest.amount) {
             throw InsufficientFundsException("Insufficient balance.")
         }
 
-        fromAccount.balance -= transferRequest.amount
-        toAccount.balance += transferRequest.amount
+        fromAccount.balance -= initiateTransferRequest.amount
+        toAccount.balance += initiateTransferRequest.amount
 
         accountRepository.save(fromAccount)
         accountRepository.save(toAccount)
 
         val transaction = Transaction(
-            fromAccountId = transferRequest.fromAccountId,
-            toAccountId = transferRequest.toAccountId,
+            fromAccountId = initiateTransferRequest.fromAccountId,
+            toAccountId = initiateTransferRequest.toAccountId,
             userId = userId,
             date = "2024-12-12",
-            amount = transferRequest.amount,
+            amount = initiateTransferRequest.amount,
             timestamp = System.currentTimeMillis(),
-            categoryId = transferRequest.categoryId
+            categoryId = initiateTransferRequest.categoryId
         )
         transactionRepository.save(transaction)
 
-        val notificationRequest = NotificationRequest(
+        val sendNotificationRequest = SendNotificationRequest(
             userId = userId,
-            message = "Successfully transferred ${transferRequest.amount} from ${transferRequest.fromAccountId} to ${transferRequest.toAccountId}.",
+            message = "Successfully transferred ${initiateTransferRequest.amount} from ${initiateTransferRequest.fromAccountId} to ${initiateTransferRequest.toAccountId}.",
             type = "TRANSFER"
         )
-        notificationService.createNotification(notificationRequest)
+        notificationService.createNotification(sendNotificationRequest)
 
-        userActivityLogService.logActivity(
+        activityLogService.logActivity(
             userId,
             "Funds transferred",
-            "From: ${transferRequest.fromAccountId}, To: ${transferRequest.toAccountId}, Amount: ${transferRequest.amount}"
+            "From: ${initiateTransferRequest.fromAccountId}, To: ${initiateTransferRequest.toAccountId}, Amount: ${initiateTransferRequest.amount}"
         )
 
         logger.info("Transfer completed successfully")
-        return TransferResponse(message = "Transfer successful")
+        return TransferStatusResponse(message = "Transfer successful")
     }
 }

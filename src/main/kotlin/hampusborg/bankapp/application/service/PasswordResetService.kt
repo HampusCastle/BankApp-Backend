@@ -1,7 +1,7 @@
 package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.application.dto.PasswordResetToken
-import hampusborg.bankapp.application.dto.request.UserProfileUpdateRequest
+import hampusborg.bankapp.application.dto.request.UpdateUserProfileRequest
 import hampusborg.bankapp.core.domain.User
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.mail.javamail.JavaMailSender
@@ -45,7 +45,7 @@ class PasswordResetService(
         val user = userService.getUserById(userId)
         user.password = newPassword
 
-        val updateRequest = UserProfileUpdateRequest(
+        val updateRequest = UpdateUserProfileRequest(
             username = user.username,
             email = user.email,
             password = newPassword

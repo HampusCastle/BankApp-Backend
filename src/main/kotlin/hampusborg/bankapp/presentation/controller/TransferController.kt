@@ -1,7 +1,7 @@
 package hampusborg.bankapp.presentation.controller
 
-import hampusborg.bankapp.application.dto.request.TransferRequest
-import hampusborg.bankapp.application.dto.response.TransferResponse
+import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
+import hampusborg.bankapp.application.dto.response.TransferStatusResponse
 import hampusborg.bankapp.application.service.TransferService
 import hampusborg.bankapp.infrastructure.util.JwtUtil
 import jakarta.validation.Valid
@@ -16,22 +16,22 @@ class TransferController(
 ) {
     @PostMapping
     fun transferFunds(
-        @Valid @RequestBody transferRequest: TransferRequest,
+        @Valid @RequestBody initiateTransferRequest: InitiateTransferRequest,
         @RequestHeader("Authorization") token: String
-    ): ResponseEntity<TransferResponse> {
-        println("Received transfer request: $transferRequest")
+    ): ResponseEntity<TransferStatusResponse> {
+        println("Received transfer request: $initiateTransferRequest")
         val userDetails = jwtUtil.extractUserDetails(token.substringAfter(" "))
         val userId = userDetails?.first
 
         return if (userId != null) {
             return try {
-                val transferResponse = transferService.transferFunds(transferRequest, userId)
+                val transferResponse = transferService.transferFunds(initiateTransferRequest, userId)
                 ResponseEntity.ok(transferResponse)
             } catch (e: RuntimeException) {
-                ResponseEntity.badRequest().body(TransferResponse(message = "Transfer failed", status = "failed"))
+                ResponseEntity.badRequest().body(TransferStatusResponse(message = "Transfer failed", status = "failed"))
             }
         } else {
-            ResponseEntity.badRequest().body(TransferResponse(message = "User ID could not be extracted from token"))
+            ResponseEntity.badRequest().body(TransferStatusResponse(message = "User ID could not be extracted from token"))
         }
     }
 }

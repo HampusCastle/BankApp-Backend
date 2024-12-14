@@ -1,9 +1,9 @@
 package hampusborg.bankapp.presentation.controller
 
-import hampusborg.bankapp.application.dto.request.UserLoginRequest
-import hampusborg.bankapp.application.dto.request.UserRegistrationRequest
-import hampusborg.bankapp.application.dto.response.UserLoginResponse
-import hampusborg.bankapp.application.dto.response.UserRegistrationResponse
+import hampusborg.bankapp.application.dto.request.AuthenticateUserRequest
+import hampusborg.bankapp.application.dto.request.RegisterUserRequest
+import hampusborg.bankapp.application.dto.response.AuthenticateUserResponse
+import hampusborg.bankapp.application.dto.response.RegisteredUserResponse
 import hampusborg.bankapp.application.exception.classes.AccountCreationException
 import hampusborg.bankapp.application.exception.classes.DuplicateUserException
 import hampusborg.bankapp.application.service.AuthenticationService
@@ -22,9 +22,9 @@ class AuthenticationController(
 ) {
 
     @PostMapping("/register")
-    fun registerUser(@Valid @RequestBody userRegistrationRequest: UserRegistrationRequest): ResponseEntity<UserRegistrationResponse> {
+    fun registerUser(@Valid @RequestBody registerUserRequest: RegisterUserRequest): ResponseEntity<RegisteredUserResponse> {
         return try {
-            val response = authenticationService.registerUser(userRegistrationRequest)
+            val response = authenticationService.registerUser(registerUserRequest)
             ResponseEntity.ok(response)
         } catch (e: DuplicateUserException) {
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
@@ -34,15 +34,15 @@ class AuthenticationController(
     }
 
     @PostMapping("/login")
-    fun login(@Valid @RequestBody userLoginRequest: UserLoginRequest): ResponseEntity<UserLoginResponse> {
+    fun login(@Valid @RequestBody authenticateUserRequest: AuthenticateUserRequest): ResponseEntity<AuthenticateUserResponse> {
         return try {
-            val token = authenticationService.loginUser(userLoginRequest)
+            val token = authenticationService.loginUser(authenticateUserRequest)
 
-            val response = UserLoginResponse(token)
+            val response = AuthenticateUserResponse(token)
 
             ResponseEntity.ok(response)
         } catch (e: RuntimeException) {
-            ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserLoginResponse("Invalid username or password"))
+            ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AuthenticateUserResponse("Invalid username or password"))
         }
     }
 }

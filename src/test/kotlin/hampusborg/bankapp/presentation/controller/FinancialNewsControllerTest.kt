@@ -1,9 +1,8 @@
 package hampusborg.bankapp.presentation.controller
 
-import hampusborg.bankapp.application.dto.request.FinancialNewsRequest
-import hampusborg.bankapp.application.dto.response.FinancialNewsResponse
+import hampusborg.bankapp.application.dto.request.FetchFinancialNewsRequest
+import hampusborg.bankapp.application.dto.response.FinancialNewsDetailsResponse
 import hampusborg.bankapp.application.service.FinancialNewsService
-import hampusborg.bankapp.presentation.controller.FinancialNewsController
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -37,13 +36,13 @@ class FinancialNewsControllerTest {
     @WithMockUser
     fun `should return financial news successfully`() {
         val mockNews = listOf(
-            FinancialNewsResponse("Finance News 1", "Description of finance news 1", "Source 1", "http://link1.com"),
-            FinancialNewsResponse("Finance News 2", "Description of finance news 2", "Source 2", "http://link2.com")
+            FinancialNewsDetailsResponse("Finance News 1", "Description of finance news 1", "Source 1", "http://link1.com"),
+            FinancialNewsDetailsResponse("Finance News 2", "Description of finance news 2", "Source 2", "http://link2.com")
         )
 
-        val financialNewsRequest = FinancialNewsRequest(page = 1, pageSize = 5, category = "business")
+        val fetchFinancialNewsRequest = FetchFinancialNewsRequest(page = 1, pageSize = 5, category = "business")
 
-        whenever(financialNewsService.getFinancialNews(financialNewsRequest)).thenReturn(mockNews)
+        whenever(financialNewsService.getFinancialNews(fetchFinancialNewsRequest)).thenReturn(mockNews)
 
         val response = mockMvc.perform(get("/news/finance")
             .param("page", "1")

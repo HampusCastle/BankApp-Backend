@@ -1,8 +1,8 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.UserLoginRequest
-import hampusborg.bankapp.application.dto.request.UserRegistrationRequest
-import hampusborg.bankapp.application.dto.response.UserRegistrationResponse
+import hampusborg.bankapp.application.dto.request.AuthenticateUserRequest
+import hampusborg.bankapp.application.dto.request.RegisterUserRequest
+import hampusborg.bankapp.application.dto.response.RegisteredUserResponse
 import hampusborg.bankapp.application.exception.classes.AccountCreationException
 import hampusborg.bankapp.application.exception.classes.DuplicateUserException
 import hampusborg.bankapp.core.domain.Role
@@ -21,26 +21,26 @@ class AuthenticationService(
 ) {
     private val logger = LoggerFactory.getLogger(AuthenticationService::class.java)
 
-    fun registerUser(userRegistrationRequest: UserRegistrationRequest): UserRegistrationResponse {
-        logger.info("Attempting to register user: ${userRegistrationRequest.username}")
+    fun registerUser(registerUserRequest: RegisterUserRequest): RegisteredUserResponse {
+        logger.info("Attempting to register user: ${registerUserRequest.username}")
 
-        userRepository.findByUsername(userRegistrationRequest.username)?.let {
-            logger.error("Username already exists: ${userRegistrationRequest.username}")
-            throw DuplicateUserException("Username already exists: ${userRegistrationRequest.username}")
+        userRepository.findByUsername(registerUserRequest.username)?.let {
+            logger.error("Username already exists: ${registerUserRequest.username}")
+            throw DuplicateUserException("Username already exists: ${registerUserRequest.username}")
         }
 
-        val encodedPassword = passwordEncoder.encode(userRegistrationRequest.password)
+        val encodedPassword = passwordEncoder.encode(registerUserRequest.password)
         val user = User(
-            username = userRegistrationRequest.username,
+            username = registerUserRequest.username,
             password = encodedPassword,
-            email = userRegistrationRequest.email,
+            email = registerUserRequest.email,
             roles = listOf(Role.USER)
         )
 
         return try {
             logger.info("User registered successfully: ${user.username}")
             val savedUser = userRepository.save(user)
-            UserRegistrationResponse(
+            RegisteredUserResponse(
                 id = savedUser.id!!,
                 username = savedUser.username,
                 roles = savedUser.roles.map { it.name }
@@ -51,13 +51,13 @@ class AuthenticationService(
         }
     }
 
-    fun loginUser(userLoginRequest: UserLoginRequest): String {
-        logger.info("Attempting to authenticate user: ${userLoginRequest.username}")
+    fun loginUser(authenticateUserRequest: AuthenticateUserRequest): String {
+        logger.info("Attempting to authenticate user: ${authenticateUserRequest.username}")
 
-        val user = userRepository.findByUsername(userLoginRequest.username)
+        val user = userRepository.findByUsername(authenticateUserRequest.username)
             ?: throw RuntimeException("Invalid username or password")
 
-        if (!passwordEncoder.matches(userLoginRequest.password, user.password)) {
+        if (!passwordEncoder.matches(authenticateUserRequest.password, user.password)) {
             throw RuntimeException("Invalid username or password")
         }
 

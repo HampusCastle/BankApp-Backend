@@ -1,6 +1,6 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.ScheduledPaymentRequest
+import hampusborg.bankapp.application.dto.request.CreateScheduledPaymentRequest
 import hampusborg.bankapp.core.domain.ScheduledPayment
 import hampusborg.bankapp.core.repository.ScheduledPaymentRepository
 import org.slf4j.LoggerFactory
@@ -13,7 +13,7 @@ class ScheduledPaymentService(
 
     private val logger = LoggerFactory.getLogger(ScheduledPaymentService::class.java)
 
-    fun createScheduledPayment(request: ScheduledPaymentRequest, userId: String): ScheduledPayment {
+    fun createScheduledPayment(request: CreateScheduledPaymentRequest, userId: String): ScheduledPayment {
         logger.info("Creating scheduled payment for user: $userId with amount: ${request.amount}")
 
         if (request.schedule !in listOf("daily", "weekly", "monthly")) {
@@ -31,7 +31,7 @@ class ScheduledPaymentService(
         return scheduledPaymentRepository.save(scheduledPayment)
     }
 
-    fun updateScheduledPayment(id: String, request: ScheduledPaymentRequest): ScheduledPayment {
+    fun updateScheduledPayment(id: String, request: CreateScheduledPaymentRequest): ScheduledPayment {
         logger.info("Updating scheduled payment with ID: $id")
         val existingPayment = scheduledPaymentRepository.findById(id)
             .orElseThrow { Exception("Payment not found") }

@@ -1,6 +1,6 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.UserProfileUpdateRequest
+import hampusborg.bankapp.application.dto.request.UpdateUserProfileRequest
 import hampusborg.bankapp.application.exception.classes.UserNotFoundException
 import hampusborg.bankapp.core.domain.User
 import hampusborg.bankapp.core.repository.UserRepository
@@ -15,15 +15,15 @@ class UserService(
 ) {
     private val logger = LoggerFactory.getLogger(UserService::class.java)
 
-    fun updateUser(userId: String, userProfileUpdateRequest: UserProfileUpdateRequest): User {
+    fun updateUser(userId: String, updateUserProfileRequest: UpdateUserProfileRequest): User {
         val user = userRepository.findById(userId).orElseThrow {
             UserNotFoundException("User not found with id: $userId")
         }
 
-        user.username = userProfileUpdateRequest.username
-        user.email = userProfileUpdateRequest.email
+        user.username = updateUserProfileRequest.username
+        user.email = updateUserProfileRequest.email
 
-        userProfileUpdateRequest.password.let {
+        updateUserProfileRequest.password.let {
             user.password = passwordEncoder.encode(it)
         }
 

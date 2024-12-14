@@ -1,7 +1,7 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.UserLoginRequest
-import hampusborg.bankapp.application.dto.request.UserRegistrationRequest
+import hampusborg.bankapp.application.dto.request.AuthenticateUserRequest
+import hampusborg.bankapp.application.dto.request.RegisterUserRequest
 import hampusborg.bankapp.application.exception.classes.DuplicateUserException
 import hampusborg.bankapp.core.domain.Role
 import hampusborg.bankapp.core.domain.User
@@ -22,7 +22,7 @@ class AuthenticationServiceTest {
 
     @Test
     fun `should throw DuplicateUserException when username already exists`() {
-        val registrationRequest = UserRegistrationRequest(
+        val registrationRequest = RegisterUserRequest(
             username = "testuser",
             password = "password123",
             email = "testuser@example.com"
@@ -37,7 +37,7 @@ class AuthenticationServiceTest {
 
     @Test
     fun `should register a user successfully`() {
-        val registrationRequest = UserRegistrationRequest(
+        val registrationRequest = RegisterUserRequest(
             username = "newuser",
             password = "password123",
             email = "newuser@example.com"
@@ -59,7 +59,7 @@ class AuthenticationServiceTest {
 
     @Test
     fun `should login a user successfully`() {
-        val loginRequest = UserLoginRequest(username = "testuser", password = "password123")
+        val loginRequest = AuthenticateUserRequest(username = "testuser", password = "password123")
 
         val user = User(
             id = "1",
@@ -83,7 +83,7 @@ class AuthenticationServiceTest {
 
     @Test
     fun `should throw exception when login password is incorrect`() {
-        val loginRequest = UserLoginRequest(username = "testuser", password = "wrongpassword")
+        val loginRequest = AuthenticateUserRequest(username = "testuser", password = "wrongpassword")
         val user = User(username = "testuser", password = "encodedPassword123", email = "testuser@example.com", roles = listOf(Role.USER))
 
         whenever(userRepository.findByUsername(loginRequest.username)).thenReturn(user)

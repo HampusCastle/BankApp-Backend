@@ -1,7 +1,7 @@
 package hampusborg.bankapp.application.service
 
 
-import hampusborg.bankapp.application.dto.request.UserProfileUpdateRequest
+import hampusborg.bankapp.application.dto.request.UpdateUserProfileRequest
 import hampusborg.bankapp.application.exception.classes.UserNotFoundException
 import hampusborg.bankapp.core.domain.Role
 import hampusborg.bankapp.core.domain.User
@@ -31,7 +31,7 @@ class UserServiceTest {
             roles = listOf(Role.USER)
         )
 
-        val updateRequest = UserProfileUpdateRequest(
+        val updateRequest = UpdateUserProfileRequest(
             username = "newusername",
             email = "newemail@example.com",
             password = "newpassword123"
@@ -63,7 +63,7 @@ class UserServiceTest {
     @Test
     fun `should throw UserNotFoundException when user not found`() {
         val userId = "12345"
-        val updateRequest = UserProfileUpdateRequest(
+        val updateRequest = UpdateUserProfileRequest(
             username = "newusername",
             email = "newemail@example.com",
             password = "newpassword123"

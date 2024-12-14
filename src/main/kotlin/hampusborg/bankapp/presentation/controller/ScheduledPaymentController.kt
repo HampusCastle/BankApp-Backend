@@ -1,7 +1,7 @@
 package hampusborg.bankapp.presentation.controller
 
-import hampusborg.bankapp.application.dto.request.ScheduledPaymentRequest
-import hampusborg.bankapp.application.dto.response.ScheduledPaymentResponse
+import hampusborg.bankapp.application.dto.request.CreateScheduledPaymentRequest
+import hampusborg.bankapp.application.dto.response.ScheduledPaymentDetailsResponse
 import hampusborg.bankapp.application.service.ScheduledPaymentService
 import hampusborg.bankapp.infrastructure.util.JwtUtil
 import jakarta.validation.Valid
@@ -20,9 +20,9 @@ class ScheduledPaymentController(
 
     @PostMapping
     fun createScheduledPayment(
-        @Valid @RequestBody scheduledPaymentRequest: ScheduledPaymentRequest,
+        @Valid @RequestBody createScheduledPaymentRequest: CreateScheduledPaymentRequest,
         @RequestHeader("Authorization", required = false) token: String?
-    ): ResponseEntity<ScheduledPaymentResponse> {
+    ): ResponseEntity<ScheduledPaymentDetailsResponse> {
         if (token.isNullOrEmpty()) {
             return ResponseEntity.status(401).build()
         }
@@ -33,16 +33,16 @@ class ScheduledPaymentController(
         logger.info("Received request to create scheduled payment for user: $userId")
 
         return try {
-            val createdPayment = scheduledPaymentService.createScheduledPayment(scheduledPaymentRequest, userId)
+            val createdPayment = scheduledPaymentService.createScheduledPayment(createScheduledPaymentRequest, userId)
 
-            val response = ScheduledPaymentResponse(
+            val response = ScheduledPaymentDetailsResponse(
                 message = "Scheduled payment created successfully for user: $userId",
                 paymentId = createdPayment.id
             )
             ResponseEntity.ok(response)
         } catch (e: Exception) {
             logger.error("Error creating scheduled payment: ${e.message}")
-            ResponseEntity.badRequest().body(ScheduledPaymentResponse(message = "Error creating scheduled payment"))
+            ResponseEntity.badRequest().body(ScheduledPaymentDetailsResponse(message = "Error creating scheduled payment"))
         }
     }
 
@@ -50,26 +50,26 @@ class ScheduledPaymentController(
     @PutMapping("/{id}")
     fun updateScheduledPayment(
         @PathVariable id: String,
-        @Valid @RequestBody scheduledPaymentRequest: ScheduledPaymentRequest
-    ): ResponseEntity<ScheduledPaymentResponse> {
+        @Valid @RequestBody createScheduledPaymentRequest: CreateScheduledPaymentRequest
+    ): ResponseEntity<ScheduledPaymentDetailsResponse> {
         logger.info("Received request to update scheduled payment with ID: $id")
         return try {
-            val updatedPayment = scheduledPaymentService.updateScheduledPayment(id, scheduledPaymentRequest)
-            val response = ScheduledPaymentResponse(message = "Scheduled payment updated successfully.")
+            val updatedPayment = scheduledPaymentService.updateScheduledPayment(id, createScheduledPaymentRequest)
+            val response = ScheduledPaymentDetailsResponse(message = "Scheduled payment updated successfully.")
             ResponseEntity.ok(response)
         } catch (e: Exception) {
-            ResponseEntity.badRequest().body(ScheduledPaymentResponse(message = "Error updating scheduled payment"))
+            ResponseEntity.badRequest().body(ScheduledPaymentDetailsResponse(message = "Error updating scheduled payment"))
         }
     }
 
     @DeleteMapping("/{id}")
-    fun deleteScheduledPayment(@PathVariable id: String): ResponseEntity<ScheduledPaymentResponse> {
+    fun deleteScheduledPayment(@PathVariable id: String): ResponseEntity<ScheduledPaymentDetailsResponse> {
         logger.info("Received request to delete scheduled payment with ID: $id")
         return try {
             scheduledPaymentService.deleteScheduledPayment(id)
-            ResponseEntity.ok(ScheduledPaymentResponse(message = "Scheduled payment deleted successfully"))
+            ResponseEntity.ok(ScheduledPaymentDetailsResponse(message = "Scheduled payment deleted successfully"))
         } catch (e: Exception) {
-            ResponseEntity.badRequest().body(ScheduledPaymentResponse(message = "Error deleting scheduled payment"))
+            ResponseEntity.badRequest().body(ScheduledPaymentDetailsResponse(message = "Error deleting scheduled payment"))
         }
     }
 }

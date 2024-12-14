@@ -1,12 +1,11 @@
 package hampusborg.bankapp.presentation.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import hampusborg.bankapp.application.dto.request.SavingsGoalRequest
-import hampusborg.bankapp.application.dto.response.SavingsGoalResponse
+import hampusborg.bankapp.application.dto.request.CreateSavingsGoalRequest
+import hampusborg.bankapp.application.dto.response.SavingsGoalDetailsResponse
 import hampusborg.bankapp.application.exception.classes.SavingsGoalNotFoundException
 import hampusborg.bankapp.application.service.SavingsGoalService
 import hampusborg.bankapp.core.domain.SavingsGoal
-import hampusborg.bankapp.presentation.controller.SavingsGoalController
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,13 +40,13 @@ class SavingsGoalControllerTest {
 
     @Test
     fun `should create savings goal`() {
-        val request = SavingsGoalRequest(
+        val request = CreateSavingsGoalRequest(
             name = "Vacation Fund",
             userId = "user123",
             targetAmount = 5000.0,
             targetDate = LocalDate.of(2025, 1, 1)
         )
-        val response = SavingsGoalResponse(
+        val response = SavingsGoalDetailsResponse(
             id = "goal123",
             name = request.name,
             userId = request.userId,
@@ -79,7 +78,7 @@ class SavingsGoalControllerTest {
 
     @Test
     fun `should fetch savings goal by ID`() {
-        val response = SavingsGoalResponse(
+        val response = SavingsGoalDetailsResponse(
             id = "goal123",
             name = "Vacation Fund",
             userId = "user123",
@@ -108,7 +107,7 @@ class SavingsGoalControllerTest {
 
     @Test
     fun `should return bad request for invalid savings goal creation`() {
-        val invalidRequest = SavingsGoalRequest(
+        val invalidRequest = CreateSavingsGoalRequest(
             name = "",
             userId = "",
             targetAmount = -1000.0,
@@ -156,13 +155,13 @@ class SavingsGoalControllerTest {
 
     @Test
     fun `should update savings goal`() {
-        val updateRequest = SavingsGoalRequest(
+        val updateRequest = CreateSavingsGoalRequest(
             name = "Updated Goal",
             userId = "user123",
             targetAmount = 6000.0,
             targetDate = LocalDate.of(2025, 12, 31)
         )
-        val updatedResponse = SavingsGoalResponse(
+        val updatedResponse = SavingsGoalDetailsResponse(
             id = "goal123",
             name = updateRequest.name,
             userId = updateRequest.userId,

@@ -1,7 +1,7 @@
 package hampusborg.bankapp.presentation.controller
 
-import hampusborg.bankapp.application.dto.request.MarketTrendsRequest
-import hampusborg.bankapp.application.dto.response.MarketTrendsResponse
+import hampusborg.bankapp.application.dto.request.GetMarketTrendsRequest
+import hampusborg.bankapp.application.dto.response.MarketTrendsDetailsResponse
 import hampusborg.bankapp.application.service.MarketTrendsService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -26,8 +26,8 @@ class MarketTrendsController(private val marketTrendsService: MarketTrendsServic
         ]
     )
     @PostMapping
-    fun getMarketTrends(@RequestBody @Valid marketTrendsRequest: MarketTrendsRequest): ResponseEntity<MarketTrendsResponse> {
-        val marketTrends = marketTrendsService.getMarketTrends(marketTrendsRequest)
+    fun getMarketTrends(@RequestBody @Valid getMarketTrendsRequest: GetMarketTrendsRequest): ResponseEntity<MarketTrendsDetailsResponse> {
+        val marketTrends = marketTrendsService.getMarketTrends(getMarketTrendsRequest)
         return ResponseEntity.ok(marketTrends)
     }
 }

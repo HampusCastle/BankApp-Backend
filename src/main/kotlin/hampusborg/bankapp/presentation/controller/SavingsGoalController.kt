@@ -1,7 +1,7 @@
 package hampusborg.bankapp.presentation.controller
 
-import hampusborg.bankapp.application.dto.request.SavingsGoalRequest
-import hampusborg.bankapp.application.dto.response.SavingsGoalResponse
+import hampusborg.bankapp.application.dto.request.CreateSavingsGoalRequest
+import hampusborg.bankapp.application.dto.response.SavingsGoalDetailsResponse
 import hampusborg.bankapp.application.service.SavingsGoalService
 import hampusborg.bankapp.core.domain.SavingsGoal
 import jakarta.validation.Valid
@@ -17,20 +17,20 @@ class SavingsGoalController(
     private val logger = LoggerFactory.getLogger(SavingsGoalController::class.java)
 
     @PostMapping
-    fun createSavingsGoal(@Valid @RequestBody savingsGoalRequest: SavingsGoalRequest): ResponseEntity<SavingsGoalResponse> {
-        logger.info("Creating savings goal: ${savingsGoalRequest.name} for user: ${savingsGoalRequest.userId}")
+    fun createSavingsGoal(@Valid @RequestBody createSavingsGoalRequest: CreateSavingsGoalRequest): ResponseEntity<SavingsGoalDetailsResponse> {
+        logger.info("Creating savings goal: ${createSavingsGoalRequest.name} for user: ${createSavingsGoalRequest.userId}")
 
         val savingsGoal = SavingsGoal(
-            name = savingsGoalRequest.name,
-            userId = savingsGoalRequest.userId,
-            targetAmount = savingsGoalRequest.targetAmount,
-            targetDate = savingsGoalRequest.targetDate,
+            name = createSavingsGoalRequest.name,
+            userId = createSavingsGoalRequest.userId,
+            targetAmount = createSavingsGoalRequest.targetAmount,
+            targetDate = createSavingsGoalRequest.targetDate,
             currentAmount = 0.0
         )
 
         val createdGoal = savingsGoalService.createSavingsGoal(savingsGoal)
         return ResponseEntity.ok(
-            SavingsGoalResponse(
+            SavingsGoalDetailsResponse(
                 id = createdGoal.id!!,
                 name = createdGoal.name,
                 userId = createdGoal.userId,
@@ -42,11 +42,11 @@ class SavingsGoalController(
     }
 
     @GetMapping("/{id}")
-    fun getSavingsGoal(@PathVariable id: String): ResponseEntity<SavingsGoalResponse> {
+    fun getSavingsGoal(@PathVariable id: String): ResponseEntity<SavingsGoalDetailsResponse> {
         logger.info("Fetching savings goal with ID: $id")
         val goal = savingsGoalService.getSavingsGoal(id)
         return ResponseEntity.ok(
-            SavingsGoalResponse(
+            SavingsGoalDetailsResponse(
                 id = goal.id!!,
                 name = goal.name,
                 userId = goal.userId,
@@ -58,10 +58,10 @@ class SavingsGoalController(
     }
 
     @GetMapping
-    fun getSavingsGoalsByUserId(@RequestParam userId: String): ResponseEntity<List<SavingsGoalResponse>> {
+    fun getSavingsGoalsByUserId(@RequestParam userId: String): ResponseEntity<List<SavingsGoalDetailsResponse>> {
         logger.info("Fetching all savings goals for user: $userId")
         val goals = savingsGoalService.getSavingsGoalsByUserId(userId).map { goal ->
-            SavingsGoalResponse(
+            SavingsGoalDetailsResponse(
                 id = goal.id!!,
                 name = goal.name,
                 userId = goal.userId,
@@ -76,20 +76,20 @@ class SavingsGoalController(
     @PutMapping("/{id}")
     fun updateSavingsGoal(
         @PathVariable id: String,
-        @Valid @RequestBody savingsGoalRequest: SavingsGoalRequest
-    ): ResponseEntity<SavingsGoalResponse> {
+        @Valid @RequestBody createSavingsGoalRequest: CreateSavingsGoalRequest
+    ): ResponseEntity<SavingsGoalDetailsResponse> {
         logger.info("Updating savings goal with ID: $id")
         val updatedGoal = savingsGoalService.updateSavingsGoal(id, SavingsGoal(
             id = id,
-            name = savingsGoalRequest.name,
-            userId = savingsGoalRequest.userId,
-            targetAmount = savingsGoalRequest.targetAmount,
-            targetDate = savingsGoalRequest.targetDate,
+            name = createSavingsGoalRequest.name,
+            userId = createSavingsGoalRequest.userId,
+            targetAmount = createSavingsGoalRequest.targetAmount,
+            targetDate = createSavingsGoalRequest.targetDate,
             currentAmount = 0.0
         ))
 
         return ResponseEntity.ok(
-            SavingsGoalResponse(
+            SavingsGoalDetailsResponse(
                 id = updatedGoal.id!!,
                 name = updatedGoal.name,
                 userId = updatedGoal.userId,

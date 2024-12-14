@@ -1,12 +1,11 @@
 package hampusborg.bankapp.presentation.controller
 
-import hampusborg.bankapp.application.dto.request.UserLoginRequest
-import hampusborg.bankapp.application.dto.request.UserRegistrationRequest
-import hampusborg.bankapp.application.dto.response.UserRegistrationResponse
+import hampusborg.bankapp.application.dto.request.AuthenticateUserRequest
+import hampusborg.bankapp.application.dto.request.RegisterUserRequest
+import hampusborg.bankapp.application.dto.response.RegisteredUserResponse
 import hampusborg.bankapp.application.exception.classes.AccountCreationException
 import hampusborg.bankapp.application.exception.classes.DuplicateUserException
 import hampusborg.bankapp.application.service.AuthenticationService
-import hampusborg.bankapp.presentation.controller.AuthenticationController
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
@@ -40,18 +39,18 @@ class AuthenticationControllerTest {
     @Test
     @WithMockUser
     fun `should register user successfully`() {
-        val userRegistrationRequest = UserRegistrationRequest(
+        val registerUserRequest = RegisterUserRequest(
             username = "testuser",
             password = "password123",
             email = "testuser@example.com"
         )
-        val userRegistrationResponse = UserRegistrationResponse(
+        val registeredUserResponse = RegisteredUserResponse(
             id = "12345",
             username = "testuser",
             roles = listOf("USER")
         )
 
-        whenever(authenticationService.registerUser(any())).thenReturn(userRegistrationResponse)
+        whenever(authenticationService.registerUser(any())).thenReturn(registeredUserResponse)
 
         mockMvc.perform(
             MockMvcRequestBuilders.post("/auth/register")
@@ -120,7 +119,7 @@ class AuthenticationControllerTest {
     @Test
     @WithMockUser
     fun `should authenticate user successfully and return token`() {
-        val userLoginRequest = UserLoginRequest(username = "testuser", password = "password123")
+        val authenticateUserRequest = AuthenticateUserRequest(username = "testuser", password = "password123")
         val token = "valid.jwt.token"
 
         whenever(authenticationService.loginUser(any())).thenReturn(token)

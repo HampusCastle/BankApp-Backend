@@ -1,7 +1,7 @@
 package hampusborg.bankapp.presentation.controller
 
-import hampusborg.bankapp.application.dto.request.NotificationRequest
-import hampusborg.bankapp.application.dto.response.NotificationResponse
+import hampusborg.bankapp.application.dto.request.SendNotificationRequest
+import hampusborg.bankapp.application.dto.response.NotificationDetailsResponse
 import hampusborg.bankapp.application.service.NotificationService
 import hampusborg.bankapp.infrastructure.util.JwtUtil
 import org.springframework.http.ResponseEntity
@@ -15,11 +15,11 @@ class NotificationController(
 ) {
 
     @GetMapping
-    fun getNotifications(@RequestHeader("Authorization") token: String): ResponseEntity<List<NotificationResponse>> {
+    fun getNotifications(@RequestHeader("Authorization") token: String): ResponseEntity<List<NotificationDetailsResponse>> {
         val userId = extractUserIdFromToken(token)
         return if (userId != null) {
             val notifications = notificationService.getUserNotifications(userId).map { notification ->
-                NotificationResponse(
+                NotificationDetailsResponse(
                     id = notification.id,
                     userId = notification.userId,
                     message = notification.message,
@@ -35,18 +35,18 @@ class NotificationController(
 
     @PostMapping
     fun createNotification(
-        @RequestBody notificationRequest: NotificationRequest
-    ): ResponseEntity<NotificationResponse> {
+        @RequestBody sendNotificationRequest: SendNotificationRequest
+    ): ResponseEntity<NotificationDetailsResponse> {
         return try {
-            val notification = notificationService.createNotification(notificationRequest)
-            val notificationResponse = NotificationResponse(
+            val notification = notificationService.createNotification(sendNotificationRequest)
+            val notificationDetailsResponse = NotificationDetailsResponse(
                 id = notification.id,
                 userId = notification.userId,
                 message = notification.message,
                 timestamp = notification.timestamp,
                 type = notification.type
             )
-            ResponseEntity.ok(notificationResponse)
+            ResponseEntity.ok(notificationDetailsResponse)
         } catch (e: Exception) {
             ResponseEntity.badRequest().body(null)
         }

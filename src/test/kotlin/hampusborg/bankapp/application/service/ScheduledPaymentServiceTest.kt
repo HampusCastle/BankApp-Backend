@@ -1,6 +1,6 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.ScheduledPaymentRequest
+import hampusborg.bankapp.application.dto.request.CreateScheduledPaymentRequest
 import hampusborg.bankapp.core.domain.ScheduledPayment
 import hampusborg.bankapp.core.repository.ScheduledPaymentRepository
 import org.junit.jupiter.api.Test
@@ -15,7 +15,7 @@ class ScheduledPaymentServiceTest {
 
     @Test
     fun `should create scheduled payment successfully`() {
-        val request = ScheduledPaymentRequest(
+        val request = CreateScheduledPaymentRequest(
             fromAccountId = "account1",
             toAccountId = "account2",
             amount = 100.0,
@@ -54,7 +54,7 @@ class ScheduledPaymentServiceTest {
             nextPaymentDate = System.currentTimeMillis() + 2592000000
         )
 
-        val updatedRequest = ScheduledPaymentRequest(
+        val updatedRequest = CreateScheduledPaymentRequest(
             fromAccountId = "account1",
             toAccountId = "account2",
             amount = 150.0,
@@ -74,7 +74,7 @@ class ScheduledPaymentServiceTest {
 
     @Test
     fun `should throw exception when updating non-existing scheduled payment`() {
-        val updatedRequest = ScheduledPaymentRequest(
+        val updatedRequest = CreateScheduledPaymentRequest(
             fromAccountId = "account1",
             toAccountId = "account2",
             amount = 150.0,

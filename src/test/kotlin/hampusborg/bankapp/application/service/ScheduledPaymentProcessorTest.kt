@@ -1,7 +1,7 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.TransferRequest
-import hampusborg.bankapp.application.dto.response.TransferResponse
+import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
+import hampusborg.bankapp.application.dto.response.TransferStatusResponse
 import hampusborg.bankapp.core.domain.ScheduledPayment
 import hampusborg.bankapp.core.domain.TransactionCategory
 import hampusborg.bankapp.core.repository.TransactionCategoryRepository
@@ -12,11 +12,11 @@ class ScheduledPaymentProcessorTest {
 
     private val scheduledPaymentService: ScheduledPaymentService = mock()
     private val transferService: TransferService = mock()
-    private val userActivityLogService: UserActivityLogService = mock()
+    private val activityLogService: ActivityLogService = mock()
     private val transactionCategoryRepository: TransactionCategoryRepository = mock()
 
     private val scheduledPaymentProcessor = ScheduledPaymentProcessor(
-        scheduledPaymentService, transferService, userActivityLogService, transactionCategoryRepository
+        scheduledPaymentService, transferService, activityLogService, transactionCategoryRepository
     )
 
     @Test
@@ -44,13 +44,13 @@ class ScheduledPaymentProcessorTest {
                 any(),
                 any()
             )
-        ).thenReturn(TransferResponse(message = "Transfer successful"))
+        ).thenReturn(TransferStatusResponse(message = "Transfer successful"))
 
         doNothing().`when`(scheduledPaymentService).save(any())
 
         scheduledPaymentProcessor.processScheduledPayments(now)
 
-        val captor = argumentCaptor<TransferRequest>()
+        val captor = argumentCaptor<InitiateTransferRequest>()
         verify(transferService).transferFunds(captor.capture(), eq("user123"))
 
         val capturedRequest = captor.firstValue

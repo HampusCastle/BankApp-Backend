@@ -1,6 +1,6 @@
 package hampusborg.bankapp.presentation.controller
 
-import hampusborg.bankapp.application.dto.request.TransactionRequest
+import hampusborg.bankapp.application.dto.request.CreateTransactionRequest
 import hampusborg.bankapp.application.mapper.TransactionMapper
 import hampusborg.bankapp.application.service.TransactionService
 import hampusborg.bankapp.infrastructure.util.JwtUtil
@@ -21,13 +21,13 @@ class TransactionController(
 
     @PostMapping
     fun createTransaction(
-        @Valid @RequestBody transactionRequest: TransactionRequest,
+        @Valid @RequestBody createTransactionRequest: CreateTransactionRequest,
         @RequestHeader("Authorization") token: String
     ): ResponseEntity<Any> {
         val userId = jwtUtil.extractUserDetails(token.substringAfter(" "))?.first
         return if (userId != null) {
             logger.info("Creating transaction for user: $userId")
-            val transaction = transactionMapper.mapToTransaction(transactionRequest)
+            val transaction = transactionMapper.mapToTransaction(createTransactionRequest)
             transaction.id = "generatedId"
             ResponseEntity.ok(
                 mapOf("message" to "Transaction created successfully", "transactionId" to transaction.id)

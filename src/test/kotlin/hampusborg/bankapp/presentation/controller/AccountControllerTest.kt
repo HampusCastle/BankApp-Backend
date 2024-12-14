@@ -1,9 +1,8 @@
 package hampusborg.bankapp.presentation.controller
 
-import hampusborg.bankapp.application.dto.response.AccountResponse
+import hampusborg.bankapp.application.dto.response.AccountDetailsResponse
 import hampusborg.bankapp.application.service.AccountService
 import hampusborg.bankapp.infrastructure.util.JwtUtil
-import hampusborg.bankapp.presentation.controller.AccountController
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,7 +40,7 @@ class AccountControllerTest {
     @WithMockUser
     fun `should create account successfully`() {
         val token = "Bearer somevalidtoken"
-        val accountResponse = AccountResponse(
+        val accountDetailsResponse = AccountDetailsResponse(
             id = "account-id",
             name = "Test Account",
             balance = 1000.0,
@@ -50,7 +49,7 @@ class AccountControllerTest {
         )
 
         whenever(jwtUtil.extractUserDetails(token.substringAfter(" "))).thenReturn(Pair("user-id", listOf("USER")))
-        whenever(accountService.createAccount(any(), eq("user-id"))).thenReturn(accountResponse)
+        whenever(accountService.createAccount(any(), eq("user-id"))).thenReturn(accountDetailsResponse)
 
         mockMvc.perform(
             MockMvcRequestBuilders.post("/accounts/create")

@@ -1,7 +1,7 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.MarketTrendsRequest
-import hampusborg.bankapp.application.dto.response.MarketTrendsResponse
+import hampusborg.bankapp.application.dto.request.GetMarketTrendsRequest
+import hampusborg.bankapp.application.dto.response.MarketTrendsDetailsResponse
 import hampusborg.bankapp.application.exception.classes.ApiRequestException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
@@ -14,7 +14,7 @@ class MarketTrendsService(
     private val webClient: WebClient
 ) {
 
-    fun getMarketTrends(request: MarketTrendsRequest): MarketTrendsResponse {
+    fun getMarketTrends(request: GetMarketTrendsRequest): MarketTrendsDetailsResponse {
         val symbol = request.symbol
         val url = "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=$symbol&apikey=$financialApiKey"
 
@@ -33,7 +33,7 @@ class MarketTrendsService(
             val volume = quote["volume"] ?: "N/A"
             val percentageChange = quote["changePercent"] ?: "N/A"
 
-            MarketTrendsResponse(
+            MarketTrendsDetailsResponse(
                 trend = if (change > 0) "The market has gone up today!" else "The market has gone down today.",
                 price = price,
                 volume = volume,

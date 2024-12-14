@@ -1,11 +1,10 @@
 package hampusborg.bankapp.presentation.controller
 
-import hampusborg.bankapp.application.dto.request.TransferRequest
-import hampusborg.bankapp.application.dto.response.TransferResponse
+import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
+import hampusborg.bankapp.application.dto.response.TransferStatusResponse
 import hampusborg.bankapp.application.mapper.TransactionMapper
 import hampusborg.bankapp.application.service.TransferService
 import hampusborg.bankapp.infrastructure.util.JwtUtil
-import hampusborg.bankapp.presentation.controller.TransferController
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
@@ -46,16 +45,16 @@ class TransferControllerTest {
 
     @Test
     fun `should transfer funds successfully`() {
-        val transferRequest = TransferRequest(
+        val initiateTransferRequest = InitiateTransferRequest(
             fromAccountId = "acc1",
             toAccountId = "acc2",
             amount = 100.0,
             categoryId = "category1"
         )
 
-        val transferResponse = TransferResponse(message = "Transfer successful", status = "success")
+        val transferStatusResponse = TransferStatusResponse(message = "Transfer successful", status = "success")
 
-        whenever(transferService.transferFunds(any(), any())).thenReturn(transferResponse)
+        whenever(transferService.transferFunds(any(), any())).thenReturn(transferStatusResponse)
         whenever(jwtUtil.extractUserDetails("valid_token")).thenReturn(Pair("user123", listOf("ROLE_USER")))
 
         mockMvc.perform(
@@ -71,14 +70,14 @@ class TransferControllerTest {
 
     @Test
     fun `should return bad request when transfer fails`() {
-        val transferRequest = TransferRequest(
+        val initiateTransferRequest = InitiateTransferRequest(
             fromAccountId = "acc1",
             toAccountId = "acc2",
             amount = 100.0,
             categoryId = "category1"
         )
 
-        val transferResponse = TransferResponse(message = "Transfer failed", status = "failed")
+        val transferStatusResponse = TransferStatusResponse(message = "Transfer failed", status = "failed")
 
         whenever(transferService.transferFunds(any(), any())).thenThrow(RuntimeException("Transfer failed"))
         whenever(jwtUtil.extractUserDetails("valid_token")).thenReturn(Pair("user123", listOf("ROLE_USER")))

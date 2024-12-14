@@ -1,7 +1,7 @@
 package hampusborg.bankapp.presentation.controller
 
-import hampusborg.bankapp.application.dto.request.AccountRequest
-import hampusborg.bankapp.application.dto.response.AccountResponse
+import hampusborg.bankapp.application.dto.request.CreateAccountRequest
+import hampusborg.bankapp.application.dto.response.AccountDetailsResponse
 import hampusborg.bankapp.application.service.AccountService
 import hampusborg.bankapp.infrastructure.util.JwtUtil
 import jakarta.validation.Valid
@@ -21,15 +21,15 @@ class AccountController(
 
     @PostMapping("/create")
     fun createAccount(
-        @Valid @RequestBody accountRequest: AccountRequest,
+        @Valid @RequestBody createAccountRequest: CreateAccountRequest,
         @RequestHeader("Authorization") token: String
-    ): ResponseEntity<AccountResponse> {
+    ): ResponseEntity<AccountDetailsResponse> {
         val userId = jwtUtil.extractUserDetails(token.substringAfter(" "))?.first
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
 
         logger.info("Creating account for user: $userId")
         return try {
-            val accountResponse = accountService.createAccount(accountRequest.copy(userId = userId), userId)
+            val accountResponse = accountService.createAccount(createAccountRequest.copy(userId = userId), userId)
             logger.info("Account created successfully for user $userId")
             ResponseEntity.ok(accountResponse)
         } catch (e: Exception) {
@@ -42,7 +42,7 @@ class AccountController(
     fun getAccountById(
         @PathVariable accountId: String,
         @RequestHeader("Authorization") token: String
-    ): ResponseEntity<AccountResponse> {
+    ): ResponseEntity<AccountDetailsResponse> {
         val userId = jwtUtil.extractUserDetails(token.substringAfter(" "))?.first
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
 
@@ -56,7 +56,7 @@ class AccountController(
     @GetMapping("/my-accounts")
     fun getAllAccounts(
         @RequestHeader("Authorization") token: String
-    ): ResponseEntity<List<AccountResponse>> {
+    ): ResponseEntity<List<AccountDetailsResponse>> {
         val userId = jwtUtil.extractUserDetails(token.substringAfter(" "))?.first
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
 

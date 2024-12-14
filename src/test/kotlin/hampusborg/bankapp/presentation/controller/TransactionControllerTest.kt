@@ -1,12 +1,11 @@
 package hampusborg.bankapp.presentation.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import hampusborg.bankapp.application.dto.request.TransactionRequest
+import hampusborg.bankapp.application.dto.request.CreateTransactionRequest
 import hampusborg.bankapp.application.mapper.TransactionMapper
 import hampusborg.bankapp.application.service.TransactionService
 import hampusborg.bankapp.core.domain.Transaction
 import hampusborg.bankapp.infrastructure.util.JwtUtil
-import hampusborg.bankapp.presentation.controller.TransactionController
 
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -83,7 +82,7 @@ class TransactionControllerTest {
 
     @Test
     fun `should create transaction successfully`() {
-        val request = TransactionRequest(
+        val request = CreateTransactionRequest(
             fromAccountId = "fromAccount",
             toAccountId = "toAccount",
             amount = 100.0,

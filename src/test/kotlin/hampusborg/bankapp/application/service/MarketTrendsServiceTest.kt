@@ -1,7 +1,7 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.MarketTrendsRequest
-import hampusborg.bankapp.application.dto.response.MarketTrendsResponse
+import hampusborg.bankapp.application.dto.request.GetMarketTrendsRequest
+import hampusborg.bankapp.application.dto.response.MarketTrendsDetailsResponse
 import hampusborg.bankapp.application.exception.classes.ApiRequestException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -57,9 +57,9 @@ class MarketTrendsServiceTest {
 
         mockWebClient(mockResponse)
 
-        val result = marketTrendsService.getMarketTrends(MarketTrendsRequest(symbol = "SPY"))
+        val result = marketTrendsService.getMarketTrends(GetMarketTrendsRequest(symbol = "SPY"))
 
-        val expected = MarketTrendsResponse(
+        val expected = MarketTrendsDetailsResponse(
             trend = "The market has gone up today!",
             price = "100.0",
             volume = "5000",
@@ -82,9 +82,9 @@ class MarketTrendsServiceTest {
 
         mockWebClient(mockResponse)
 
-        val result = marketTrendsService.getMarketTrends(MarketTrendsRequest(symbol = "SPY"))
+        val result = marketTrendsService.getMarketTrends(GetMarketTrendsRequest(symbol = "SPY"))
 
-        val expected = MarketTrendsResponse(
+        val expected = MarketTrendsDetailsResponse(
             trend = "The market has gone down today.",
             price = "100.0",
             volume = "5000",
@@ -107,7 +107,7 @@ class MarketTrendsServiceTest {
             .thenThrow(RuntimeException("API error"))
 
         val exception = assertFailsWith<ApiRequestException> {
-            marketTrendsService.getMarketTrends(MarketTrendsRequest(symbol = "SPY"))
+            marketTrendsService.getMarketTrends(GetMarketTrendsRequest(symbol = "SPY"))
         }
 
         assertEquals("API error", exception.message)
@@ -120,7 +120,7 @@ class MarketTrendsServiceTest {
         mockWebClient(mockResponse)
 
         val exception = assertFailsWith<ApiRequestException> {
-            marketTrendsService.getMarketTrends(MarketTrendsRequest(symbol = "SPY"))
+            marketTrendsService.getMarketTrends(GetMarketTrendsRequest(symbol = "SPY"))
         }
 
         assertEquals("Failed to fetch market trends: Missing 'Global Quote' data in the API response", exception.message)
