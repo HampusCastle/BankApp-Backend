@@ -1,8 +1,8 @@
 package hampusborg.bankapp.application.service
 
-
 import hampusborg.bankapp.application.dto.request.UpdateUserProfileRequest
 import hampusborg.bankapp.application.exception.classes.UserNotFoundException
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.Role
 import hampusborg.bankapp.core.domain.User
 import hampusborg.bankapp.core.repository.UserRepository
@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.crypto.password.PasswordEncoder
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -18,7 +19,8 @@ class UserServiceTest {
 
     private val userRepository: UserRepository = mock()
     private val passwordEncoder: PasswordEncoder = mock()
-    private val userService = UserService(userRepository, passwordEncoder)
+    private val rateLimiterService: RateLimiterService = mock()
+    private val userService = UserService(userRepository, passwordEncoder, rateLimiterService)
 
     @Test
     fun `should update user profile successfully`() {
@@ -39,7 +41,8 @@ class UserServiceTest {
 
         val encodedPassword = "encodedpassword"
 
-        whenever(userRepository.findById(userId)).thenReturn(java.util.Optional.of(existingUser))
+        whenever(rateLimiterService.isAllowed(userId)).thenReturn(true)
+        whenever(userRepository.findById(userId)).thenReturn(Optional.of(existingUser))
         whenever(passwordEncoder.encode(updateRequest.password)).thenReturn(encodedPassword)
         whenever(userRepository.save(any<User>())).thenAnswer { invocation ->
             val user = invocation.arguments[0] as User
@@ -59,7 +62,6 @@ class UserServiceTest {
         })
     }
 
-
     @Test
     fun `should throw UserNotFoundException when user not found`() {
         val userId = "12345"
@@ -69,7 +71,8 @@ class UserServiceTest {
             password = "newpassword123"
         )
 
-        whenever(userRepository.findById(userId)).thenReturn(java.util.Optional.empty())
+        whenever(rateLimiterService.isAllowed(userId)).thenReturn(true)
+        whenever(userRepository.findById(userId)).thenReturn(Optional.empty())
 
         val exception = assertFailsWith<UserNotFoundException> {
             userService.updateUser(userId, updateRequest)
@@ -77,7 +80,6 @@ class UserServiceTest {
 
         assertEquals("User not found with id: $userId", exception.message)
     }
-
 
     @Test
     fun `should get user by ID successfully`() {
@@ -90,7 +92,8 @@ class UserServiceTest {
             roles = listOf(Role.USER)
         )
 
-        whenever(userRepository.findById(userId)).thenReturn(java.util.Optional.of(user))
+        whenever(rateLimiterService.isAllowed(userId)).thenReturn(true)
+        whenever(userRepository.findById(userId)).thenReturn(Optional.of(user))
 
         val result = userService.getUserById(userId)
 
@@ -102,7 +105,9 @@ class UserServiceTest {
     @Test
     fun `should throw UserNotFoundException when user not found by ID`() {
         val userId = "12345"
-        whenever(userRepository.findById(userId)).thenReturn(java.util.Optional.empty())
+
+        whenever(rateLimiterService.isAllowed(userId)).thenReturn(true)
+        whenever(userRepository.findById(userId)).thenReturn(Optional.empty())
 
         assertFailsWith<UserNotFoundException> {
             userService.getUserById(userId)

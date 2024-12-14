@@ -1,11 +1,9 @@
 package hampusborg.bankapp.application.service.base
 
 import hampusborg.bankapp.application.dto.response.*
-import hampusborg.bankapp.application.exception.classes.SavingsGoalNotFoundException
 import hampusborg.bankapp.application.exception.classes.UserNotFoundException
 import hampusborg.bankapp.core.domain.*
 import hampusborg.bankapp.core.repository.*
-import org.springframework.cache.Cache
 import org.springframework.cache.CacheManager
 import org.springframework.stereotype.Service
 
@@ -20,23 +18,19 @@ class CacheHelperService(
     private val scheduledPaymentRepository: ScheduledPaymentRepository
 ) {
 
-    fun getSavingsGoal(id: String): SavingsGoal {
-        val cache: Cache = cacheManager.getCache("savingsGoals")!!
-        return cache.get(id, SavingsGoal::class.java)
-            ?: loadSavingsGoalFromDbAndCache(id)
+    fun getSavingsGoal(id: String): SavingsGoal? {
+        val cache = cacheManager.getCache("savingsGoals")
+        return cache?.get(id, SavingsGoal::class.java)
     }
 
-    private fun loadSavingsGoalFromDbAndCache(id: String): SavingsGoal {
-        val savingsGoal = savingsGoalRepository.findById(id).orElseThrow {
-            throw SavingsGoalNotFoundException("Savings goal not found for ID: $id")
-        }
-        cacheManager.getCache("savingsGoals")?.put(id, savingsGoal)
-        return savingsGoal
+    fun storeSavingsGoal(id: String, savingsGoal: SavingsGoal) {
+        val cache = cacheManager.getCache("savingsGoals")
+        cache?.put(id, savingsGoal)
     }
 
     fun getSavingsGoalsByUserId(userId: String): List<SavingsGoal> {
-        val cache: Cache = cacheManager.getCache("userSavingsGoals")!!
-        return cache.get(userId, List::class.java)?.let {
+        val cache = cacheManager.getCache("userSavingsGoals")
+        return cache?.get(userId, List::class.java)?.let {
             it as? List<SavingsGoal> ?: emptyList()
         } ?: loadSavingsGoalsByUserIdFromDbAndCache(userId)
     }
@@ -48,8 +42,8 @@ class CacheHelperService(
     }
 
     fun getAccountsByUserId(userId: String): List<AccountDetailsResponse> {
-        val cache: Cache = cacheManager.getCache("userAccounts")!!
-        return cache.get(userId, List::class.java)?.let {
+        val cache = cacheManager.getCache("userAccounts")
+        return cache?.get(userId, List::class.java)?.let {
             it as? List<AccountDetailsResponse> ?: emptyList()
         } ?: loadAccountsByUserIdFromDbAndCache(userId)
     }
@@ -70,8 +64,8 @@ class CacheHelperService(
     }
 
     fun getMonthlyExpenses(userId: String): ExpensesSummaryResponse {
-        val cache: Cache = cacheManager.getCache("monthlyExpenses")!!
-        return cache.get(userId, ExpensesSummaryResponse::class.java)
+        val cache = cacheManager.getCache("monthlyExpenses")
+        return cache?.get(userId, ExpensesSummaryResponse::class.java)
             ?: loadMonthlyExpensesFromDbAndCache(userId)
     }
 
@@ -97,8 +91,8 @@ class CacheHelperService(
     }
 
     fun getSubscriptionById(id: String): Subscription {
-        val cache: Cache = cacheManager.getCache("subscriptions")!!
-        return cache.get(id, Subscription::class.java)
+        val cache = cacheManager.getCache("subscriptions")
+        return cache?.get(id, Subscription::class.java)
             ?: loadSubscriptionFromDbAndCache(id)
     }
 
@@ -111,8 +105,8 @@ class CacheHelperService(
     }
 
     fun getSubscriptionsByUserId(userId: String): List<Subscription> {
-        val cache: Cache = cacheManager.getCache("userSubscriptions")!!
-        return cache.get(userId, List::class.java)?.let {
+        val cache = cacheManager.getCache("userSubscriptions")
+        return cache?.get(userId, List::class.java)?.let {
             it as? List<Subscription> ?: emptyList()
         } ?: loadSubscriptionsByUserIdFromDbAndCache(userId)
     }
@@ -124,8 +118,8 @@ class CacheHelperService(
     }
 
     fun getUserByUsername(username: String): User {
-        val cache: Cache = cacheManager.getCache("userCache")!!
-        return cache.get(username, User::class.java)
+        val cache = cacheManager.getCache("userCache")
+        return cache?.get(username, User::class.java)
             ?: loadUserFromDbAndCache(username)
     }
 
@@ -136,8 +130,8 @@ class CacheHelperService(
     }
 
     fun getTransactionHistory(userId: String): TransactionHistoryDetailsResponse {
-        val cache: Cache = cacheManager.getCache("transactionHistory")!!
-        return cache.get(userId, TransactionHistoryDetailsResponse::class.java)
+        val cache = cacheManager.getCache("transactionHistory")
+        return cache?.get(userId, TransactionHistoryDetailsResponse::class.java)
             ?: loadTransactionHistoryFromDbAndCache(userId)
     }
 
@@ -155,8 +149,8 @@ class CacheHelperService(
     }
 
     fun getMarketTrends(userId: String): MarketTrendsDetailsResponse {
-        val cache: Cache = cacheManager.getCache("marketTrends")!!
-        return cache.get(userId, MarketTrendsDetailsResponse::class.java)
+        val cache = cacheManager.getCache("marketTrends")
+        return cache?.get(userId, MarketTrendsDetailsResponse::class.java)
             ?: loadMarketTrendsFromDbAndCache(userId)
     }
 
@@ -175,8 +169,8 @@ class CacheHelperService(
     }
 
     fun getScheduledPayments(userId: String): ScheduledPaymentDetailsResponse {
-        val cache: Cache = cacheManager.getCache("scheduledPayments")!!
-        return cache.get(userId, ScheduledPaymentDetailsResponse::class.java)
+        val cache = cacheManager.getCache("scheduledPayments")
+        return cache?.get(userId, ScheduledPaymentDetailsResponse::class.java)
             ?: loadScheduledPaymentsFromDbAndCache(userId)
     }
 
@@ -190,8 +184,8 @@ class CacheHelperService(
     }
 
     fun getAccountInfo(userId: String): String {
-        val cache: Cache = cacheManager.getCache("accountInfo")!!
-        return cache.get(userId, String::class.java)
+        val cache = cacheManager.getCache("accountInfo")
+        return cache?.get(userId, String::class.java)
             ?: loadAccountInfoFromDbAndCache(userId)
     }
 
@@ -203,17 +197,22 @@ class CacheHelperService(
     }
 
     fun getFinancialNews(): List<FinancialNewsDetailsResponse> {
-        val cache: Cache = cacheManager.getCache("financialNews")!!
-        return cache.get("allNews", List::class.java) as? List<FinancialNewsDetailsResponse> ?: emptyList()
+        val cache = cacheManager.getCache("financialNews")
+        return cache?.get("allNews", List::class.java) as? List<FinancialNewsDetailsResponse> ?: emptyList()
     }
 
     fun storeFinancialNews(news: List<FinancialNewsDetailsResponse>) {
-        val cache: Cache = cacheManager.getCache("financialNews")!!
-        cache.put("allNews", news)
+        val cache = cacheManager.getCache("financialNews")
+        cache?.put("allNews", news)
+    }
+
+    fun storeMonthlyExpenses(userId: String, expensesSummary: ExpensesSummaryResponse) {
+        val cache = cacheManager.getCache("monthlyExpenses")
+        cache?.put(userId, expensesSummary)
     }
 
     fun evictCache(cacheName: String, key: String) {
-        val cache: Cache = cacheManager.getCache(cacheName)!!
-        cache.evict(key)
+        val cache = cacheManager.getCache(cacheName)
+        cache?.evict(key)
     }
 }

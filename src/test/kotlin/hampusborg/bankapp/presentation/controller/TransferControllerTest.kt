@@ -4,7 +4,9 @@ import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
 import hampusborg.bankapp.application.dto.response.TransferStatusResponse
 import hampusborg.bankapp.application.mapper.TransactionMapper
 import hampusborg.bankapp.application.service.TransferService
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.infrastructure.util.JwtUtil
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
@@ -34,6 +36,9 @@ class TransferControllerTest {
     @Autowired
     private lateinit var jwtUtil: JwtUtil
 
+    @Autowired
+    private lateinit var rateLimiterService: RateLimiterService
+
     @TestConfiguration
     class TransferServiceTestConfig {
         @Bean
@@ -41,8 +46,15 @@ class TransferControllerTest {
 
         @Bean
         fun jwtUtil(): JwtUtil = mock()
+
+        @Bean
+        fun rateLimiterService(): RateLimiterService = org.mockito.kotlin.mock()
     }
 
+    @BeforeEach
+    fun setup() {
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)  // Mock rate limiter behavior for all tests
+    }
     @Test
     fun `should transfer funds successfully`() {
         val initiateTransferRequest = InitiateTransferRequest(

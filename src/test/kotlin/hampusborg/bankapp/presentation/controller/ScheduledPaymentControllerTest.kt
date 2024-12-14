@@ -3,9 +3,11 @@ package hampusborg.bankapp.presentation.controller
 import com.fasterxml.jackson.databind.ObjectMapper
 import hampusborg.bankapp.application.dto.request.CreateScheduledPaymentRequest
 import hampusborg.bankapp.application.service.ScheduledPaymentService
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.ScheduledPayment
 import hampusborg.bankapp.infrastructure.config.SecurityConfig
 import hampusborg.bankapp.infrastructure.util.JwtUtil
+import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
@@ -39,6 +41,9 @@ class ScheduledPaymentControllerTest {
     @Autowired
     private lateinit var jwtUtil: JwtUtil
 
+    @Autowired
+    private lateinit var rateLimiterService: RateLimiterService
+
     @TestConfiguration
     class ScheduledPaymentServiceTestConfig {
         @Bean
@@ -46,6 +51,14 @@ class ScheduledPaymentControllerTest {
 
         @Bean
         fun jwtUtil(): JwtUtil = mock()
+
+        @Bean
+        fun rateLimiterService(): RateLimiterService = org.mockito.kotlin.mock()
+    }
+
+    @BeforeEach
+    fun setup() {
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)  // Mock rate limiter behavior for all tests
     }
 
     @Test

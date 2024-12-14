@@ -21,7 +21,27 @@ class BudgetService(
             throw RuntimeException("Too many requests, please try again later.")
         }
 
-        return cacheHelperService.getMonthlyExpenses(userId)
+        val expenses = cacheHelperService.getMonthlyExpenses(userId)
+
+        if (expenses != null) {
+            return expenses
+        }
+
+        val transactions = transactionRepository.findByFromAccountId(userId) + transactionRepository.findByToAccountId(userId)
+
+        if (transactions.isEmpty()) {
+            throw Exception("No transactions found for user ID: $userId")
+        }
+
+        val totalExpenses = transactions.sumOf { it.amount }
+        val categories = transactions.groupBy { it.categoryId }
+            .mapValues { (_, txns) -> txns.sumOf { it.amount } }
+
+        val expensesResponse = ExpensesSummaryResponse(totalExpenses, categories)
+
+        cacheHelperService.storeMonthlyExpenses(userId, expensesResponse)
+
+        return expensesResponse
     }
 
     fun getSavingsProgress(userId: String, savingsGoalId: String): SavingsProgressSummaryResponse {

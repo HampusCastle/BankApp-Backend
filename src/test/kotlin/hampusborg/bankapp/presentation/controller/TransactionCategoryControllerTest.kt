@@ -1,10 +1,13 @@
 package hampusborg.bankapp.presentation.controller
 
 import hampusborg.bankapp.application.service.TransactionCategoryService
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.TransactionCategory
 import hampusborg.bankapp.presentation.controller.TransactionCategoryController
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
+import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -27,10 +30,21 @@ class TransactionCategoryControllerTest {
     @Autowired
     private lateinit var transactionCategoryService: TransactionCategoryService
 
+    @Autowired
+    private lateinit var rateLimiterService: RateLimiterService
+
     @TestConfiguration
     class TransactionCategoryServiceTestConfig {
         @Bean
         fun transactionCategoryService(): TransactionCategoryService = mock()
+
+        @Bean
+        fun rateLimiterService(): RateLimiterService = org.mockito.kotlin.mock()
+    }
+
+    @BeforeEach
+    fun setup() {
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)
     }
 
     @Test

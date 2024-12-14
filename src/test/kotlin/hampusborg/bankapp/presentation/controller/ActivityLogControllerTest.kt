@@ -1,10 +1,13 @@
 package hampusborg.bankapp.presentation.controller
 
 import hampusborg.bankapp.application.service.ActivityLogService
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.UserActivityLog
 import hampusborg.bankapp.infrastructure.util.JwtUtil
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
+import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -31,6 +34,9 @@ class ActivityLogControllerTest {
     @Autowired
     private lateinit var jwtUtil: JwtUtil
 
+    @Autowired
+    lateinit var rateLimiterService: RateLimiterService
+
     @TestConfiguration
     class UserActivityLogServiceTestConfig {
         @Bean
@@ -38,6 +44,14 @@ class ActivityLogControllerTest {
 
         @Bean
         fun jwtUtil(): JwtUtil = mock()
+
+        @Bean
+        fun rateLimiterService(): RateLimiterService = mock()
+    }
+
+    @BeforeEach
+    fun setup() {
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)  // Mock rate limiter behavior for all tests
     }
 
     @Test

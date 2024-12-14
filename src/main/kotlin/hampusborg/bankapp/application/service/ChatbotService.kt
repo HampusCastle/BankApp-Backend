@@ -1,5 +1,6 @@
 package hampusborg.bankapp.application.service
 
+import hampusborg.bankapp.application.dto.response.FinancialNewsDetailsResponse
 import hampusborg.bankapp.application.dto.response.MarketTrendsDetailsResponse
 import hampusborg.bankapp.application.dto.response.ScheduledPaymentDetailsResponse
 import hampusborg.bankapp.application.dto.response.TransactionHistoryDetailsResponse
@@ -45,8 +46,8 @@ class ChatbotService(
         return cacheHelperService.getAccountInfo(userId)
     }
 
-    fun getFinancialNews(): String {
-        return cacheHelperService.getFinancialNews()
+    fun getFinancialNews(): List<FinancialNewsDetailsResponse> {
+        return cacheHelperService.getFinancialNews()  // Use cacheHelperService to get financial news
     }
 
     fun getChatbotResponse(query: String, userId: String): String {
@@ -62,7 +63,9 @@ class ChatbotService(
             query.contains("trender", ignoreCase = true) -> getMarketTrends(userId).let {
                 "Market Trend: ${it.trend}\nCurrent Price: ${it.price} SEK\nVolume: ${it.volume}\nChange: ${it.changePercent} %"
             }
-            query.contains("nyheter", ignoreCase = true) -> getFinancialNews()
+            query.contains("nyheter", ignoreCase = true) -> getFinancialNews().joinToString("\n") {
+                "Title: ${it.title}\nDescription: ${it.description}\nSource: ${it.source}\nURL: ${it.url}\n"
+            }
             else -> "Jag förstår inte din fråga. Försök att ställa en annan fråga."
         }
     }

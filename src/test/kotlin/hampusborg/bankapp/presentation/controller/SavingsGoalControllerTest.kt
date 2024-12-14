@@ -5,7 +5,9 @@ import hampusborg.bankapp.application.dto.request.CreateSavingsGoalRequest
 import hampusborg.bankapp.application.dto.response.SavingsGoalDetailsResponse
 import hampusborg.bankapp.application.exception.classes.SavingsGoalNotFoundException
 import hampusborg.bankapp.application.service.SavingsGoalService
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.SavingsGoal
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.beans.factory.annotation.Autowired
@@ -32,12 +34,21 @@ class SavingsGoalControllerTest {
     @Autowired
     private lateinit var savingsGoalService: SavingsGoalService
 
+    @Autowired
+    private lateinit var rateLimiterService: RateLimiterService
+
     @TestConfiguration
     class SavingsGoalServiceTestConfig {
         @Bean
         fun savingsGoalService(): SavingsGoalService = mock()
+        @Bean
+        fun rateLimiterService(): RateLimiterService = mock()
     }
 
+    @BeforeEach
+    fun setup() {
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)  // Mock rate limiter behavior for all tests
+    }
     @Test
     fun `should create savings goal`() {
         val request = CreateSavingsGoalRequest(

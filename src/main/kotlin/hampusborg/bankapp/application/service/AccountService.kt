@@ -44,8 +44,11 @@ class AccountService(
         if (!rateLimiterService.isAllowed(userId)) {
             throw Exception("Too many requests, please try again later.")
         }
-
-        return cacheHelperService.getAccountsByUserId(userId)  // Using CacheHelperService for caching logic
+        val accounts = cacheHelperService.getAccountsByUserId(userId)
+        if (accounts.isEmpty()) {
+            throw AccountNotFoundException("No accounts found for user ID: $userId")
+        }
+        return accounts
     }
 
     fun deleteAccount(accountId: String, userId: String): Boolean {

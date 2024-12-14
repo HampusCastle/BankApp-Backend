@@ -1,16 +1,18 @@
 package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
+import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.application.service.base.PaymentService
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.Account
 import hampusborg.bankapp.core.domain.Notification
 import hampusborg.bankapp.core.domain.Transaction
 import hampusborg.bankapp.core.repository.AccountRepository
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.boot.test.context.SpringBootTest
 import java.util.*
+import kotlin.test.assertEquals
 
 @SpringBootTest
 class TransferServiceTest {
@@ -19,8 +21,16 @@ class TransferServiceTest {
     private val notificationService: NotificationService = mock()
     private val activityLogService: ActivityLogService = mock()
     private val accountRepository: AccountRepository = mock()
+    private val rateLimiterService: RateLimiterService = mock()
+    private val cacheHelperService: CacheHelperService = mock()
 
-    private val transferService = TransferService(paymentService, notificationService, activityLogService)
+    private val transferService = TransferService(
+        paymentService,
+        notificationService,
+        activityLogService,
+        rateLimiterService,
+        cacheHelperService
+    )
 
     @Test
     fun `should transfer funds between accounts successfully`() {
@@ -61,6 +71,8 @@ class TransferServiceTest {
         )
 
         doNothing().`when`(activityLogService).logActivity(any(), any(), any())
+
+        whenever(rateLimiterService.isAllowed(userId)).thenReturn(true)
 
         val transferResponse = transferService.transferFunds(initiateTransferRequest, userId)
 

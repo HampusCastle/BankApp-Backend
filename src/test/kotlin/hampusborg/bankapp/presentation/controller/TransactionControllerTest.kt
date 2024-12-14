@@ -4,11 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import hampusborg.bankapp.application.dto.request.CreateTransactionRequest
 import hampusborg.bankapp.application.mapper.TransactionMapper
 import hampusborg.bankapp.application.service.TransactionService
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.Transaction
 import hampusborg.bankapp.infrastructure.util.JwtUtil
+import org.junit.jupiter.api.BeforeEach
 
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
+import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -35,6 +38,9 @@ class TransactionControllerTest {
     @Autowired
     private lateinit var jwtUtil: JwtUtil
 
+    @Autowired
+    private lateinit var rateLimiterService: RateLimiterService
+
     @TestConfiguration
     class TransactionServiceTestConfig {
         @Bean
@@ -42,6 +48,14 @@ class TransactionControllerTest {
 
         @Bean
         fun jwtUtil(): JwtUtil = mock()
+
+        @Bean
+        fun rateLimiterService(): RateLimiterService = org.mockito.kotlin.mock()
+    }
+
+    @BeforeEach
+    fun setup() {
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)  // Mock rate limiter behavior for all tests
     }
 
     @Test

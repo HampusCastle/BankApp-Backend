@@ -5,6 +5,8 @@ import hampusborg.bankapp.core.domain.SavingsGoal
 import hampusborg.bankapp.core.domain.Transaction
 import hampusborg.bankapp.core.repository.SavingsGoalRepository
 import hampusborg.bankapp.core.repository.TransactionRepository
+import hampusborg.bankapp.application.service.base.CacheHelperService
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.*
@@ -18,7 +20,9 @@ class BudgetServiceTest {
 
     private val transactionRepository: TransactionRepository = mock()
     private val savingsGoalRepository: SavingsGoalRepository = mock()
-    private val budgetService = BudgetService(transactionRepository, savingsGoalRepository)
+    private val rateLimiterService: RateLimiterService = mock()  // Mock rateLimiterService
+    private val cacheHelperService: CacheHelperService = mock()  // Mock cacheHelperService
+    private val budgetService = BudgetService(transactionRepository, savingsGoalRepository, rateLimiterService, cacheHelperService)
 
     @Test
     fun `should calculate monthly expenses correctly`() {
@@ -28,6 +32,7 @@ class BudgetServiceTest {
             Transaction(fromAccountId = "fromAccount", toAccountId = "toAccount", amount = 200.0, timestamp = System.currentTimeMillis(), date = "2024-12-12", userId = "user123", categoryId = "cat1")
         )
 
+        whenever(rateLimiterService.isAllowed(userId)).thenReturn(true)
         whenever(transactionRepository.findByFromAccountId(userId)).thenReturn(transactions)
 
         val response = budgetService.getMonthlyExpenses(userId)
@@ -50,6 +55,7 @@ class BudgetServiceTest {
             accountId = "123"
         )
 
+        whenever(rateLimiterService.isAllowed(userId)).thenReturn(true)
         whenever(savingsGoalRepository.findById(savingsGoalId)).thenReturn(Optional.of(savingsGoal))
 
         val response = budgetService.getSavingsProgress(userId, savingsGoalId)
@@ -63,6 +69,7 @@ class BudgetServiceTest {
         val userId = "user123"
         val savingsGoalId = "goal123"
 
+        whenever(rateLimiterService.isAllowed(userId)).thenReturn(true)
         whenever(savingsGoalRepository.findById(savingsGoalId)).thenReturn(Optional.empty())
 
         val exception = assertThrows<UserNotFoundException> {

@@ -2,7 +2,9 @@ package hampusborg.bankapp.presentation.controller
 
 import hampusborg.bankapp.application.dto.response.AccountDetailsResponse
 import hampusborg.bankapp.application.service.AccountService
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.infrastructure.util.JwtUtil
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,6 +29,9 @@ class AccountControllerTest {
     @Autowired
     lateinit var jwtUtil: JwtUtil
 
+    @Autowired
+    lateinit var rateLimiterService: RateLimiterService
+
     @TestConfiguration
     class AccountServiceTestConfig {
         @Bean
@@ -34,6 +39,14 @@ class AccountControllerTest {
 
         @Bean
         fun jwtUtil(): JwtUtil = mock()
+
+        @Bean
+        fun rateLimiterService(): RateLimiterService = mock()
+    }
+
+    @BeforeEach
+    fun setup() {
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)  // Mock rate limiter behavior for all tests
     }
 
     @Test
@@ -50,6 +63,7 @@ class AccountControllerTest {
 
         whenever(jwtUtil.extractUserDetails(token.substringAfter(" "))).thenReturn(Pair("user-id", listOf("USER")))
         whenever(accountService.createAccount(any(), eq("user-id"))).thenReturn(accountDetailsResponse)
+        whenever(rateLimiterService.isAllowed("user-id")).thenReturn(true)  // Mock rate limiter
 
         mockMvc.perform(
             MockMvcRequestBuilders.post("/accounts/create")
@@ -100,6 +114,7 @@ class AccountControllerTest {
         val token = "Bearer somevalidtoken"
 
         whenever(jwtUtil.extractUserDetails(token.substringAfter(" "))).thenReturn(Pair("user-id", listOf("USER")))
+        whenever(rateLimiterService.isAllowed("user-id")).thenReturn(true)  // Mock rate limiter
 
         mockMvc.perform(
             MockMvcRequestBuilders.get("/accounts/$accountId")
@@ -137,6 +152,7 @@ class AccountControllerTest {
         val token = "Bearer somevalidtoken"
 
         whenever(jwtUtil.extractUserDetails(token.substringAfter(" "))).thenReturn(Pair("user-id", listOf("USER")))
+        whenever(rateLimiterService.isAllowed("user-id")).thenReturn(true)  // Mock rate limiter
         whenever(accountService.deleteAccount(accountId, "user-id")).thenReturn(false)
 
         mockMvc.perform(

@@ -47,7 +47,7 @@ dependencies {
     // Swagger Impl
     implementation ("io.springfox:springfox-boot-starter:3.0.0")
 
-    //AOP Dependency for logging
+    // AOP Dependency for logging
     implementation ("org.springframework.boot:spring-boot-starter-aop")
 
     // OpenAPI for API documentation
@@ -63,7 +63,6 @@ dependencies {
 
     // Caching
     implementation("org.springframework.boot:spring-boot-starter-cache")
-    implementation("org.springframework.cache:spring-cache")
 
     // Testing dependencies
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")

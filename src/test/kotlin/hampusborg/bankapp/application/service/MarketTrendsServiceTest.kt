@@ -3,6 +3,7 @@ package hampusborg.bankapp.application.service
 import hampusborg.bankapp.application.dto.request.GetMarketTrendsRequest
 import hampusborg.bankapp.application.dto.response.MarketTrendsDetailsResponse
 import hampusborg.bankapp.application.exception.classes.ApiRequestException
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
@@ -10,9 +11,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.WebClient.RequestHeadersUriSpec
-import org.springframework.web.reactive.function.client.WebClient.RequestHeadersSpec
-import org.springframework.web.reactive.function.client.WebClient.ResponseSpec
 import reactor.core.publisher.Mono
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -24,18 +22,20 @@ class MarketTrendsServiceTest {
     private lateinit var financialApiKey: String
 
     private lateinit var webClient: WebClient
+    private lateinit var rateLimiterService: RateLimiterService
     private lateinit var marketTrendsService: MarketTrendsService
 
     @BeforeEach
     fun setUp() {
         webClient = mock()
-        marketTrendsService = MarketTrendsService(financialApiKey, webClient)
+        rateLimiterService = mock()
+        marketTrendsService = MarketTrendsService(financialApiKey, webClient, rateLimiterService)  // Inject the mocked rateLimiterService
     }
 
     private fun mockWebClient(mockResponse: Map<String, Map<String, String>>) {
-        val requestHeadersUriSpec = mock<RequestHeadersUriSpec<*>>()
-        val requestHeadersSpec = mock<RequestHeadersSpec<*>>()
-        val responseSpec = mock<ResponseSpec>()
+        val requestHeadersUriSpec = mock<WebClient.RequestHeadersUriSpec<*>>()
+        val requestHeadersSpec = mock<WebClient.RequestHeadersSpec<*>>()
+        val responseSpec = mock<WebClient.ResponseSpec>()
 
         whenever(webClient.get()).thenReturn(requestHeadersUriSpec)
         whenever(requestHeadersUriSpec.uri(any<String>())).thenReturn(requestHeadersSpec)
@@ -56,6 +56,7 @@ class MarketTrendsServiceTest {
         )
 
         mockWebClient(mockResponse)
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)
 
         val result = marketTrendsService.getMarketTrends(GetMarketTrendsRequest(symbol = "SPY"))
 
@@ -81,6 +82,7 @@ class MarketTrendsServiceTest {
         )
 
         mockWebClient(mockResponse)
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)
 
         val result = marketTrendsService.getMarketTrends(GetMarketTrendsRequest(symbol = "SPY"))
 
@@ -96,15 +98,17 @@ class MarketTrendsServiceTest {
 
     @Test
     fun `should throw exception when API call fails`() {
-        val requestHeadersUriSpec = mock<RequestHeadersUriSpec<*>>()
-        val requestHeadersSpec = mock<RequestHeadersSpec<*>>()
-        val responseSpec = mock<ResponseSpec>()
+        val requestHeadersUriSpec = mock<WebClient.RequestHeadersUriSpec<*>>()
+        val requestHeadersSpec = mock<WebClient.RequestHeadersSpec<*>>()
+        val responseSpec = mock<WebClient.ResponseSpec>()
 
         whenever(webClient.get()).thenReturn(requestHeadersUriSpec)
         whenever(requestHeadersUriSpec.uri(any<String>())).thenReturn(requestHeadersSpec)
         whenever(requestHeadersSpec.retrieve()).thenReturn(responseSpec)
         whenever(responseSpec.bodyToMono(eq(object : ParameterizedTypeReference<Map<String, Map<String, String>>>() {})))
             .thenThrow(RuntimeException("API error"))
+
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)
 
         val exception = assertFailsWith<ApiRequestException> {
             marketTrendsService.getMarketTrends(GetMarketTrendsRequest(symbol = "SPY"))
@@ -118,6 +122,7 @@ class MarketTrendsServiceTest {
         val mockResponse = emptyMap<String, Map<String, String>>()
 
         mockWebClient(mockResponse)
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)
 
         val exception = assertFailsWith<ApiRequestException> {
             marketTrendsService.getMarketTrends(GetMarketTrendsRequest(symbol = "SPY"))

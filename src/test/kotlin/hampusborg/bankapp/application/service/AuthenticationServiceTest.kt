@@ -3,6 +3,8 @@ package hampusborg.bankapp.application.service
 import hampusborg.bankapp.application.dto.request.AuthenticateUserRequest
 import hampusborg.bankapp.application.dto.request.RegisterUserRequest
 import hampusborg.bankapp.application.exception.classes.DuplicateUserException
+import hampusborg.bankapp.application.service.base.CacheHelperService
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.Role
 import hampusborg.bankapp.core.domain.User
 import hampusborg.bankapp.core.repository.UserRepository
@@ -18,7 +20,10 @@ class AuthenticationServiceTest {
     private val userRepository: UserRepository = mock()
     private val passwordEncoder: PasswordEncoder = mock()
     private val jwtUtil: JwtUtil = mock()
-    private val authenticationService = AuthenticationService(userRepository, passwordEncoder, jwtUtil)
+    private val rateLimiterService: RateLimiterService = mock() // Mock rate limiter service
+    private val cacheHelperService: CacheHelperService = mock() // Mock cache helper service
+
+    private val authenticationService = AuthenticationService(userRepository, passwordEncoder, jwtUtil, rateLimiterService, cacheHelperService)
 
     @Test
     fun `should throw DuplicateUserException when username already exists`() {
@@ -28,7 +33,10 @@ class AuthenticationServiceTest {
             email = "testuser@example.com"
         )
 
-        whenever(userRepository.findByUsername(registrationRequest.username)).thenReturn(User(username = "testuser", email = "existing@example.com", password = "password123", roles = listOf(Role.USER)))
+        whenever(rateLimiterService.isAllowed("testuser")).thenReturn(true)
+        whenever(userRepository.findByUsername(registrationRequest.username)).thenReturn(
+            User(username = "testuser", email = "existing@example.com", password = "password123", roles = listOf(Role.USER))
+        )
 
         assertFailsWith<DuplicateUserException> {
             authenticationService.registerUser(registrationRequest)
@@ -50,6 +58,7 @@ class AuthenticationServiceTest {
             val user = it.getArgument<User>(0)
             user.copy(id = "1")
         }
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)  // Mock rateLimiterService to return true
 
         val response = authenticationService.registerUser(registrationRequest)
 
@@ -71,8 +80,9 @@ class AuthenticationServiceTest {
         val token = "jwtToken123"
 
         whenever(userRepository.findByUsername(loginRequest.username)).thenReturn(user)
-
         whenever(passwordEncoder.matches(loginRequest.password, user.password)).thenReturn(true)
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)  // Mock rateLimiterService to return true
+        whenever(cacheHelperService.getUserByUsername(loginRequest.username)).thenReturn(user)  // Mock cacheHelperService
 
         whenever(jwtUtil.generateToken(user.id!!, user.username, user.roles.map { it.name })).thenReturn(token)
 
@@ -88,6 +98,7 @@ class AuthenticationServiceTest {
 
         whenever(userRepository.findByUsername(loginRequest.username)).thenReturn(user)
         whenever(passwordEncoder.matches(loginRequest.password, user.password)).thenReturn(false)
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)  // Mock rateLimiterService to return true
 
         assertFailsWith<RuntimeException> {
             authenticationService.loginUser(loginRequest)

@@ -3,8 +3,11 @@ package hampusborg.bankapp.presentation.controller
 import hampusborg.bankapp.application.dto.response.ExpensesSummaryResponse
 import hampusborg.bankapp.application.dto.response.SavingsProgressSummaryResponse
 import hampusborg.bankapp.application.service.BudgetService
+import hampusborg.bankapp.application.service.base.RateLimiterService
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
+import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -25,12 +28,21 @@ class BudgetControllerTest {
     @Autowired
     lateinit var budgetService: BudgetService
 
+    @Autowired
+    lateinit var rateLimiterService: RateLimiterService
+
     @TestConfiguration
     class BudgetReportServiceTestConfig {
         @Bean
         fun budgetReportService(): BudgetService = mock()
+        @Bean
+        fun rateLimiterService(): RateLimiterService = org.mockito.kotlin.mock()
     }
 
+    @BeforeEach
+    fun setup() {
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)  // Mock rate limiter behavior for all tests
+    }
     @Test
     @WithMockUser
     fun `should return monthly expenses successfully`() {

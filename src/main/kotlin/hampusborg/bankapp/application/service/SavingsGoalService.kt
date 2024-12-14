@@ -14,7 +14,7 @@ class SavingsGoalService(
     private val savingsGoalRepository: SavingsGoalRepository,
     private val paymentService: PaymentService,
     private val rateLimiterService: RateLimiterService,
-    private val cacheHelperService: CacheHelperService  // Inject CacheHelperService
+    private val cacheHelperService: CacheHelperService
 ) {
     fun createSavingsGoal(savingsGoal: SavingsGoal): SavingsGoal {
         if (!rateLimiterService.isAllowed(savingsGoal.userId)) {
@@ -28,8 +28,19 @@ class SavingsGoalService(
         if (!rateLimiterService.isAllowed(id)) {
             throw Exception("Too many requests, please try again later.")
         }
+        val savingsGoal = cacheHelperService.getSavingsGoal(id)
 
-        return cacheHelperService.getSavingsGoal(id)  // Use CacheHelperService for caching logic
+        if (savingsGoal == null) {
+            val goalFromRepo = savingsGoalRepository.findById(id).orElseThrow {
+                SavingsGoalNotFoundException("Savings goal not found for ID: $id")
+            }
+
+            cacheHelperService.storeSavingsGoal(id, goalFromRepo)
+
+            return goalFromRepo
+        }
+
+        return savingsGoal
     }
 
     fun getSavingsGoalsByUserId(userId: String): List<SavingsGoal> {
@@ -37,7 +48,7 @@ class SavingsGoalService(
             throw Exception("Too many requests, please try again later.")
         }
 
-        return cacheHelperService.getSavingsGoalsByUserId(userId)  // Use CacheHelperService for caching
+        return cacheHelperService.getSavingsGoalsByUserId(userId)
     }
 
     fun updateSavingsGoal(id: String, savingsGoal: SavingsGoal): SavingsGoal {

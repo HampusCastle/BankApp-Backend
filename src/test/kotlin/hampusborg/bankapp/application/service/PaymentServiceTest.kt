@@ -2,10 +2,11 @@ package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
 import hampusborg.bankapp.application.service.base.PaymentGatewayService
-import hampusborg.bankapp.application.service.base.PaymentService
 import hampusborg.bankapp.core.domain.Account
 import hampusborg.bankapp.core.repository.AccountRepository
 import hampusborg.bankapp.core.repository.TransactionRepository
+import hampusborg.bankapp.application.service.NotificationService
+import hampusborg.bankapp.application.service.base.PaymentService
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import java.util.*
@@ -16,11 +17,13 @@ class PaymentServiceTest {
     private val accountRepository: AccountRepository = mock()
     private val transactionRepository: TransactionRepository = mock()
     private val paymentGatewayService: PaymentGatewayService = mock()
+    private val notificationService: NotificationService = mock()
 
     private val paymentService = PaymentService(
         accountRepository,
         transactionRepository,
-        paymentGatewayService
+        paymentGatewayService,
+        notificationService
     )
 
     @Test
@@ -51,5 +54,7 @@ class PaymentServiceTest {
         assertEquals("account1", transaction.fromAccountId)
         assertEquals("account2", transaction.toAccountId)
         assertEquals(100.0, transaction.amount)
+
+        verify(notificationService).createNotification(any())
     }
 }

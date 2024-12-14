@@ -6,6 +6,8 @@ import hampusborg.bankapp.application.dto.response.RegisteredUserResponse
 import hampusborg.bankapp.application.exception.classes.AccountCreationException
 import hampusborg.bankapp.application.exception.classes.DuplicateUserException
 import hampusborg.bankapp.application.service.AuthenticationService
+import hampusborg.bankapp.application.service.base.RateLimiterService
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
@@ -30,12 +32,20 @@ class AuthenticationControllerTest {
     @Autowired
     lateinit var authenticationService: AuthenticationService
 
+    @Autowired var rateLimiterService: RateLimiterService = mock()
+
     @TestConfiguration
     class AuthenticationServiceTestConfig {
         @Bean
         fun authenticationService(): AuthenticationService = mock()
+        @Bean
+        fun rateLimiterService(): RateLimiterService = org.mockito.kotlin.mock()
     }
 
+    @BeforeEach
+    fun setup() {
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)  // Mock rate limiter behavior for all tests
+    }
     @Test
     @WithMockUser
     fun `should register user successfully`() {

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 @Service
 class EmailService(
     private val mailSender: JavaMailSender,
-    private val rateLimiterService: RateLimiterService // Inject RateLimiterService
+    private val rateLimiterService: RateLimiterService
 ) {
 
     fun sendEmail(to: String, subject: String, body: String, userId: String) {

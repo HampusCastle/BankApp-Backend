@@ -14,7 +14,7 @@ class TransferService(
     private val notificationService: NotificationService,
     private val activityLogService: ActivityLogService,
     private val rateLimiterService: RateLimiterService,
-    private val cacheHelperService: CacheHelperService  // Inject CacheHelperService
+    private val cacheHelperService: CacheHelperService
 ) {
     fun transferFunds(initiateTransferRequest: InitiateTransferRequest, userId: String): TransferStatusResponse {
         if (!rateLimiterService.isAllowed(userId)) {

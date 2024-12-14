@@ -13,12 +13,12 @@ import java.time.LocalDate
 class ScheduledPaymentProcessorTest {
 
     private val scheduledPaymentService: ScheduledPaymentService = mock()
-    private val paymentService: PaymentService = mock()  // Corrected to mock PaymentService
+    private val paymentService: PaymentService = mock()
     private val activityLogService: ActivityLogService = mock()
-    private val transactionCategoryRepository: TransactionCategoryRepository = mock()  // Mocked the repository
+    private val transactionCategoryRepository: TransactionCategoryRepository = mock()
 
     private val scheduledPaymentProcessor = ScheduledPaymentProcessor(
-        scheduledPaymentService, paymentService, activityLogService  // Corrected constructor
+        scheduledPaymentService, paymentService, activityLogService
     )
 
     @Test
@@ -65,7 +65,7 @@ class ScheduledPaymentProcessorTest {
         assert(capturedRequest.fromAccountId == "account1")
         assert(capturedRequest.toAccountId == "account2")
         assert(capturedRequest.amount == 100.0)
-        assert(capturedRequest.categoryId == "default-category-id")  // Ensure this matches the expected categoryId
+        assert(capturedRequest.categoryId == "default-category-id")
 
         verify(scheduledPaymentService).save(check { savedPayment ->
             println("Saved Payment: ${savedPayment.id}, ${savedPayment.schedule}, ${savedPayment.nextPaymentDate}")

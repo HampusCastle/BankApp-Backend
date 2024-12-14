@@ -3,9 +3,12 @@ package hampusborg.bankapp.presentation.controller
 import hampusborg.bankapp.application.dto.request.FetchFinancialNewsRequest
 import hampusborg.bankapp.application.dto.response.FinancialNewsDetailsResponse
 import hampusborg.bankapp.application.service.FinancialNewsService
+import hampusborg.bankapp.application.service.base.RateLimiterService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.mockito.kotlin.mock
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,12 +29,21 @@ class FinancialNewsControllerTest {
     @Autowired
     lateinit var financialNewsService: FinancialNewsService
 
+    @Autowired
+    lateinit var rateLimiterService: RateLimiterService
+
     @TestConfiguration
     class FinancialNewsServiceTestConfig {
         @Bean
         fun financialNewsService(): FinancialNewsService = mock()
+        @Bean
+        fun rateLimiterService(): RateLimiterService = mock()
     }
 
+    @BeforeEach
+    fun setup() {
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)  // Mock rate limiter behavior for all tests
+    }
     @Test
     @WithMockUser
     fun `should return financial news successfully`() {
