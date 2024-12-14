@@ -1,7 +1,6 @@
 package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
-import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.application.service.base.PaymentService
 import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.Account
@@ -22,14 +21,12 @@ class TransferServiceTest {
     private val activityLogService: ActivityLogService = mock()
     private val accountRepository: AccountRepository = mock()
     private val rateLimiterService: RateLimiterService = mock()
-    private val cacheHelperService: CacheHelperService = mock()
 
     private val transferService = TransferService(
         paymentService,
         notificationService,
         activityLogService,
         rateLimiterService,
-        cacheHelperService
     )
 
     @Test

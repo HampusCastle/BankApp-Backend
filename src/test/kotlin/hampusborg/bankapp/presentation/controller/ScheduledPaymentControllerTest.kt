@@ -58,7 +58,7 @@ class ScheduledPaymentControllerTest {
 
     @BeforeEach
     fun setup() {
-        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)  // Mock rate limiter behavior for all tests
+        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)
     }
 
     @Test

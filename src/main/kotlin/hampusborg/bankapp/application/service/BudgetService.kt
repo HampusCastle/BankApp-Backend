@@ -2,6 +2,7 @@ package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.application.dto.response.ExpensesSummaryResponse
 import hampusborg.bankapp.application.dto.response.SavingsProgressSummaryResponse
+import hampusborg.bankapp.application.exception.classes.NoTransactionsFoundException
 import hampusborg.bankapp.application.exception.classes.UserNotFoundException
 import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.application.service.base.RateLimiterService
@@ -21,16 +22,15 @@ class BudgetService(
             throw RuntimeException("Too many requests, please try again later.")
         }
 
-        val expenses = cacheHelperService.getMonthlyExpenses(userId)
+        return cacheHelperService.getMonthlyExpenses(userId)
+            ?: loadMonthlyExpensesAndCache(userId)
+    }
 
-        if (expenses != null) {
-            return expenses
-        }
-
+    private fun loadMonthlyExpensesAndCache(userId: String): ExpensesSummaryResponse {
         val transactions = transactionRepository.findByFromAccountId(userId) + transactionRepository.findByToAccountId(userId)
 
         if (transactions.isEmpty()) {
-            throw Exception("No transactions found for user ID: $userId")
+            throw NoTransactionsFoundException("No transactions found for user ID: $userId")
         }
 
         val totalExpenses = transactions.sumOf { it.amount }

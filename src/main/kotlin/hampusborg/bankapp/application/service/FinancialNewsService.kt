@@ -45,10 +45,10 @@ class FinancialNewsService(
 
             val financialNews = articles.map { article ->
                 FinancialNewsDetailsResponse(
-                    title = article.title ?: "No title",
+                    title = article.title,
                     description = article.description ?: "No description",
-                    source = article.source?.name ?: "Unknown source",
-                    url = article.url ?: "No URL"
+                    source = article.source.name,
+                    url = article.url
                 )
             }
 

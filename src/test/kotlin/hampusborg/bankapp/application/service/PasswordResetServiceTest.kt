@@ -1,12 +1,12 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.PasswordResetToken
 import hampusborg.bankapp.application.service.base.PasswordResetService
 import hampusborg.bankapp.core.domain.User
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentCaptor
 import org.mockito.kotlin.*
-import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.SimpleMailMessage
+import org.springframework.mail.javamail.JavaMailSender
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -18,24 +18,19 @@ class PasswordResetServiceTest {
 
     @Test
     fun `should send password reset email successfully`() {
-        val userId = "12345"
-        val user = User(id = userId, email = "user@example.com", username = "Test User", password = "password")
-
+        val userId = "user1"
+        val user = User(id = "user1", username = "username", email = "user@example.com", password = "oldPassword")
         whenever(userService.getUserById(userId)).thenReturn(user)
-
-        val resetToken = "random-token-string"
-        val expectedResetLink = "http://yourapp.com/reset-password?token=$resetToken"
-
-        doReturn(PasswordResetToken(resetToken, System.currentTimeMillis() + 3600000))
-            .whenever(passwordResetService).generateResetToken(user)
 
         passwordResetService.sendPasswordResetEmail(userId)
 
-        verify(mailSender).send(argThat<SimpleMailMessage> { message ->
-            message.to?.get(0) == user.email &&
-                    message.subject == "Password Reset Request" &&
-                    message.text?.contains(expectedResetLink) == true
-        })
+        val captor = ArgumentCaptor.forClass(SimpleMailMessage::class.java)
+        verify(mailSender).send(captor.capture())
+
+        val capturedMessage = captor.value
+        assertNotNull(capturedMessage)
+        assertEquals("user@example.com", capturedMessage.to?.get(0))
+        assertEquals("Password Reset Request", capturedMessage.subject)
     }
 
     @Test

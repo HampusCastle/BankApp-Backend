@@ -31,7 +31,7 @@ class RecurringPaymentService(
             fromAccountId = request.fromAccountId,
             toAccountId = request.toAccountId,
             interval = request.interval,
-            categoryId = request.categoryId ?: "",
+            categoryId = request.categoryId,
             nextPaymentDate = System.currentTimeMillis(),
             status = "active"
         )
@@ -62,7 +62,7 @@ class RecurringPaymentService(
         recurringPayment.amount = request.amount
         recurringPayment.interval = request.interval
         recurringPayment.toAccountId = request.toAccountId
-        recurringPayment.categoryId = request.categoryId ?: recurringPayment.categoryId
+        recurringPayment.categoryId = request.categoryId
 
         val updatedPayment = recurringPaymentRepository.save(recurringPayment)
 
@@ -127,7 +127,7 @@ class RecurringPaymentService(
             toAccountId = payment.toAccountId,
             interval = payment.interval,
             status = payment.status,
-            categoryId = payment.categoryId ?: "",
+            categoryId = payment.categoryId,
             nextPaymentDate = payment.nextPaymentDate
         )
     }

@@ -46,7 +46,7 @@ class JwtUtilTest {
 
         val userDetails = jwtUtil.extractUserDetails(token)
         assertNotNull(userDetails)
-        assertEquals("userId123", userDetails!!.first)
+        assertEquals("userId123", userDetails.first)
         assertEquals(roles, userDetails.second)
     }
 

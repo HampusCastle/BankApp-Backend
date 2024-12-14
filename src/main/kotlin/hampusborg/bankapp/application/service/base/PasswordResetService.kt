@@ -19,12 +19,12 @@ class PasswordResetService(
     fun sendPasswordResetEmail(userId: String) {
         val user = userService.getUserById(userId)
         val resetToken = generateResetToken(user)
-        val resetLink = "http://yourapp.com/reset-password?token=${resetToken.token}"
+        val resetLink = "https://yourapp.com/reset-password?token=${resetToken.token}"
 
         val message = SimpleMailMessage()
-        message.setTo(user.email)
-        message.setSubject("Password Reset Request")
-        message.setText("Click the link below to reset your password: \n$resetLink")
+        message.setTo(user.email)  // Use the setter to set the recipient email
+        message.subject = "Password Reset Request"
+        message.text = "Click the link below to reset your password: \n$resetLink"
 
         try {
             mailSender.send(message)

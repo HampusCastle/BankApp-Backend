@@ -15,7 +15,7 @@ class SubscriptionService(
     private val subscriptionRepository: SubscriptionRepository,
     private val paymentService: PaymentService,
     private val rateLimiterService: RateLimiterService,
-    private val cacheHelperService: CacheHelperService  // Inject CacheHelperService
+    private val cacheHelperService: CacheHelperService
 ) {
 
     fun createSubscription(request: SubscriptionRequest): SubscriptionResponse {

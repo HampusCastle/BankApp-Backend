@@ -21,8 +21,7 @@ class ProfileController(
         @Valid @RequestBody updateUserProfileRequest: UpdateUserProfileRequest
     ): ResponseEntity<UpdatedUserProfileResponse> {
         val userId = SecurityContextHolder.getContext().authentication?.principal as? String
-        if (userId == null) {
-            return ResponseEntity.badRequest().body(
+            ?: return ResponseEntity.badRequest().body(
                 UpdatedUserProfileResponse(
                     id = null,
                     username = null,
@@ -31,7 +30,6 @@ class ProfileController(
                     message = "User not found"
                 )
             )
-        }
 
         return try {
             val updatedUser = userService.updateUser(userId, updateUserProfileRequest)

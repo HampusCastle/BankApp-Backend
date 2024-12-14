@@ -38,7 +38,6 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
     // Resilience4j for fault tolerance
-    implementation("io.github.resilience4j:resilience4j-spring-boot2:1.7.1")
     implementation("io.github.resilience4j:resilience4j-kotlin:1.7.1")
 
     // Servlet API
