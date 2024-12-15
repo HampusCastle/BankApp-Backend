@@ -12,9 +12,11 @@ import hampusborg.bankapp.infrastructure.util.JwtUtil
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.test.context.TestPropertySource
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
+@TestPropertySource(locations = ["classpath:application-test.properties"])
 class AuthenticationServiceTest {
 
     private val userRepository: UserRepository = mock()

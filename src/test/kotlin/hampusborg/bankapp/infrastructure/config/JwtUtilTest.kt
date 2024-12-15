@@ -1,12 +1,9 @@
 package hampusborg.bankapp.infrastructure.config
 
 import hampusborg.bankapp.infrastructure.util.JwtUtil
-import io.github.cdimascio.dotenv.Dotenv
 import io.jsonwebtoken.security.Keys
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.TestPropertySource
 import kotlin.test.assertEquals

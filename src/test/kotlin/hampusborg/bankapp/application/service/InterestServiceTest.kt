@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.test.context.TestPropertySource
 import kotlin.test.assertEquals
 
-@ExtendWith(SpringExtension::class)
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:application-test.properties"])
 class InterestServiceTest {

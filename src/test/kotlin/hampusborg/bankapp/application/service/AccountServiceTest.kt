@@ -10,8 +10,11 @@ import hampusborg.bankapp.core.repository.AccountRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.*
+import org.springframework.test.context.TestPropertySource
 import kotlin.test.assertEquals
 
+
+@TestPropertySource(locations = ["classpath:application-test.properties"])
 class AccountServiceTest {
 
     private val accountRepository: AccountRepository = mock(AccountRepository::class.java)

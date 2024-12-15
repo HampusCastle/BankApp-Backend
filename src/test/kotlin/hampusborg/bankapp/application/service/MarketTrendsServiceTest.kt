@@ -4,7 +4,6 @@ import hampusborg.bankapp.application.dto.request.GetMarketTrendsRequest
 import hampusborg.bankapp.application.dto.response.MarketTrendsDetailsResponse
 import hampusborg.bankapp.application.exception.classes.ApiRequestException
 import hampusborg.bankapp.application.service.base.RateLimiterService
-import io.github.cdimascio.dotenv.Dotenv
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*

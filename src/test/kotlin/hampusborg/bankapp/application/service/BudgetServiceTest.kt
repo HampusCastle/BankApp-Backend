@@ -28,22 +28,6 @@ class BudgetServiceTest {
     private val cacheHelperService: CacheHelperService = mock()
     private val budgetService = BudgetService(transactionRepository, savingsGoalRepository, rateLimiterService, cacheHelperService)
 
-    @BeforeEach
-    fun setUp() {
-        val dotenv = Dotenv.load()
-        System.setProperty("MAIL_HOST", dotenv["MAIL_HOST"] ?: "smtp.gmail.com")
-        System.setProperty("MAIL_PORT", dotenv["MAIL_PORT"] ?: "587")
-        System.setProperty("MAIL_USERNAME", dotenv["MAIL_USERNAME"] ?: "defaultemail@gmail.com")
-        System.setProperty("MAIL_PASSWORD", dotenv["MAIL_PASSWORD"] ?: "defaultpassword")
-        System.setProperty("FINANCIAL_API_KEY", dotenv["FINANCIAL_API_KEY"] ?: "default-api-key")
-        System.setProperty("JWT_SECRET", dotenv["JWT_SECRET"] ?: "yourStrongRandomSecretKeyHere123456789012")  // Add JWT_SECRET here
-    }
-
-    @Test
-    fun `verify mail host property`() {
-        println(System.getProperty("MAIL_HOST"))
-        assertEquals("smtp.gmail.com", System.getProperty("MAIL_HOST"))
-    }
 
     @Test
     fun `should calculate monthly expenses correctly`() {

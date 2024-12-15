@@ -4,8 +4,10 @@ import hampusborg.bankapp.core.domain.UserActivityLog
 import hampusborg.bankapp.core.repository.UserActivityLogRepository
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
+import org.springframework.test.context.TestPropertySource
 import kotlin.test.assertEquals
 
+@TestPropertySource(locations = ["classpath:application-test.properties"])
 class ActivityLogServiceTest {
 
     private val userActivityLogRepository: UserActivityLogRepository = mock()

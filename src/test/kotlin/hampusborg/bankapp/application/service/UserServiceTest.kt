@@ -6,8 +6,6 @@ import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.Role
 import hampusborg.bankapp.core.domain.User
 import hampusborg.bankapp.core.repository.UserRepository
-import io.github.cdimascio.dotenv.Dotenv
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.boot.test.context.SpringBootTest
