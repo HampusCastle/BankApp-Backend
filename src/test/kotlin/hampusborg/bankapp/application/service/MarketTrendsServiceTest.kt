@@ -4,18 +4,21 @@ import hampusborg.bankapp.application.dto.request.GetMarketTrendsRequest
 import hampusborg.bankapp.application.dto.response.MarketTrendsDetailsResponse
 import hampusborg.bankapp.application.exception.classes.ApiRequestException
 import hampusborg.bankapp.application.service.base.RateLimiterService
+import io.github.cdimascio.dotenv.Dotenv
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.ParameterizedTypeReference
+import org.springframework.test.context.TestPropertySource
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 @SpringBootTest
+@TestPropertySource(locations = ["classpath:application-test.properties"])
 class MarketTrendsServiceTest {
 
     @Value("\${financial.api.key}")
@@ -25,12 +28,13 @@ class MarketTrendsServiceTest {
     private lateinit var rateLimiterService: RateLimiterService
     private lateinit var marketTrendsService: MarketTrendsService
 
+
     @BeforeEach
     fun setUp() {
         webClient = mock()
         rateLimiterService = mock()
-        marketTrendsService = MarketTrendsService(financialApiKey, webClient, rateLimiterService)  // Inject the mocked rateLimiterService
-    }
+        marketTrendsService = MarketTrendsService(financialApiKey, webClient, rateLimiterService)
+        }
 
     private fun mockWebClient(mockResponse: Map<String, Map<String, String>>) {
         val requestHeadersUriSpec = mock<WebClient.RequestHeadersUriSpec<*>>()

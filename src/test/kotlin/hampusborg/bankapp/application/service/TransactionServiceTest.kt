@@ -7,9 +7,11 @@ import hampusborg.bankapp.core.repository.TransactionRepository
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.TestPropertySource
 import java.time.LocalDate
 
 @SpringBootTest
+@TestPropertySource(locations = ["classpath:application-test.properties"])
 class TransactionServiceTest {
 
     private val transactionRepository: TransactionRepository = mock()

@@ -7,13 +7,17 @@ import hampusborg.bankapp.core.domain.Account
 import hampusborg.bankapp.core.domain.Notification
 import hampusborg.bankapp.core.domain.Transaction
 import hampusborg.bankapp.core.repository.AccountRepository
+import io.github.cdimascio.dotenv.Dotenv
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.TestPropertySource
 import java.util.*
 import kotlin.test.assertEquals
 
 @SpringBootTest
+@TestPropertySource(locations = ["classpath:application-test.properties"])
 class TransferServiceTest {
 
     private val paymentService: PaymentService = mock()
@@ -28,6 +32,7 @@ class TransferServiceTest {
         activityLogService,
         rateLimiterService,
     )
+
 
     @Test
     fun `should transfer funds between accounts successfully`() {

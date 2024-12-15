@@ -7,6 +7,7 @@ import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.ScheduledPayment
 import hampusborg.bankapp.infrastructure.config.SecurityConfig
 import hampusborg.bankapp.infrastructure.util.JwtUtil
+import io.github.cdimascio.dotenv.Dotenv
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
@@ -19,6 +20,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
@@ -27,6 +29,7 @@ import kotlin.test.Test
 @WebMvcTest(ScheduledPaymentController::class)
 @Import(SecurityConfig::class)
 @WithMockUser(username = "user", roles = ["USER"])
+@TestPropertySource(locations = ["classpath:application-test.properties"])
 class ScheduledPaymentControllerTest {
 
     @Autowired
@@ -57,8 +60,15 @@ class ScheduledPaymentControllerTest {
     }
 
     @BeforeEach
-    fun setup() {
+    fun setUp() {
         whenever(rateLimiterService.isAllowed(any())).thenReturn(true)
+        val dotenv = Dotenv.load()
+        System.setProperty("MAIL_HOST", dotenv["MAIL_HOST"] ?: "smtp.gmail.com")
+        System.setProperty("MAIL_PORT", dotenv["MAIL_PORT"] ?: "587")
+        System.setProperty("MAIL_USERNAME", dotenv["MAIL_USERNAME"] ?: "defaultemail@gmail.com")
+        System.setProperty("MAIL_PASSWORD", dotenv["MAIL_PASSWORD"] ?: "defaultpassword")
+        System.setProperty("FINANCIAL_API_KEY", dotenv["FINANCIAL_API_KEY"] ?: "default-api-key")
+        System.setProperty("JWT_SECRET", dotenv["JWT_SECRET"] ?: "yourStrongRandomSecretKeyHere123456789012")  // Add JWT_SECRET here
     }
 
     @Test

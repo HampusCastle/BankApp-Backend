@@ -52,4 +52,7 @@ jobs:
         run: |
           docker push hampuscastle/bankapp-backend:${{ github.sha }}
 
-      # If I have time, create Kubernetes config.
+      # Pass the environment variables to Docker
+      - name: Run Docker container with environment variables
+        run: |
+          docker run -e JWT_SECRET=${{ secrets.JWT_SECRET }} -e JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }} -e FINANCIAL_API_KEY=${{ secrets.FINANCIAL_API_KEY }} -e DATABASE_URL=${{ secrets.DATABASE_URL }} hampuscastle/bankapp-backend:${{ github.sha }}

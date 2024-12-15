@@ -40,6 +40,8 @@ dependencies {
     // Resilience4j for fault tolerance
     implementation("io.github.resilience4j:resilience4j-kotlin:1.7.1")
 
+    // Doten impl for env. variables
+    implementation ("io.github.cdimascio:dotenv-kotlin:6.2.2")
     // Servlet API
     implementation("javax.servlet:javax.servlet-api:4.0.1")
 

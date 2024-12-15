@@ -6,7 +6,6 @@ import hampusborg.bankapp.application.mapper.TransactionMapper
 import hampusborg.bankapp.application.service.TransferService
 import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.infrastructure.util.JwtUtil
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
@@ -18,6 +17,7 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Bean
 import org.springframework.http.MediaType
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 @WebMvcTest(TransferController::class)
 @AutoConfigureMockMvc(addFilters = false)
 @Import(TransactionMapper::class)
+@TestPropertySource(locations = ["classpath:application-test.properties"])
 class TransferControllerTest {
 
     @Autowired
@@ -51,10 +52,6 @@ class TransferControllerTest {
         fun rateLimiterService(): RateLimiterService = org.mockito.kotlin.mock()
     }
 
-    @BeforeEach
-    fun setup() {
-        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)
-    }
     @Test
     fun `should transfer funds successfully`() {
         val initiateTransferRequest = InitiateTransferRequest(

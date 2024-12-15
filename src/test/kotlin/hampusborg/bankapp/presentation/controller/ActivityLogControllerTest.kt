@@ -4,10 +4,8 @@ import hampusborg.bankapp.application.service.ActivityLogService
 import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.UserActivityLog
 import hampusborg.bankapp.infrastructure.util.JwtUtil
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
-import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -15,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Bean
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -23,6 +22,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @WebMvcTest(ActivityLogController::class)
 @AutoConfigureMockMvc(addFilters = false)
 @Import(ActivityLogControllerTest.UserActivityLogServiceTestConfig::class)
+@TestPropertySource(locations = ["classpath:application-test.properties"])
 class ActivityLogControllerTest {
 
     @Autowired
@@ -47,11 +47,6 @@ class ActivityLogControllerTest {
 
         @Bean
         fun rateLimiterService(): RateLimiterService = mock()
-    }
-
-    @BeforeEach
-    fun setup() {
-        whenever(rateLimiterService.isAllowed(any())).thenReturn(true)
     }
 
     @Test

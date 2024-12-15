@@ -1,34 +1,26 @@
 package hampusborg.bankapp.infrastructure.config
 
 import hampusborg.bankapp.infrastructure.util.JwtUtil
+import io.github.cdimascio.dotenv.Dotenv
 import io.jsonwebtoken.security.Keys
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.TestPropertySource
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @SpringBootTest
+@TestPropertySource(locations = ["classpath:application-test.properties"])
 class JwtUtilTest {
 
+    @Autowired
     private lateinit var jwtUtil: JwtUtil
 
-    @Value("\${jwt.secret}")
-    private lateinit var secret: String
-
-    @Value("\${jwt.expiration}")
-    private var expiration: Long = 0
-
-    @BeforeEach
-    fun setup() {
-        jwtUtil = JwtUtil().apply {
-            this.secret = this@JwtUtilTest.secret
-            this.expiration = this@JwtUtilTest.expiration
-        }
-    }
 
     @Test
     fun `should generate and validate a token`() {

@@ -2,15 +2,19 @@ package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.core.domain.Account
 import hampusborg.bankapp.core.repository.AccountRepository
+import io.github.cdimascio.dotenv.Dotenv
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.test.context.TestPropertySource
 import kotlin.test.assertEquals
 
 @ExtendWith(SpringExtension::class)
 @SpringBootTest
+@TestPropertySource(locations = ["classpath:application-test.properties"])
 class InterestServiceTest {
 
     private val accountRepository: AccountRepository = mock()
