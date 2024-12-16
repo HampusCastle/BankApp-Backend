@@ -4,7 +4,6 @@ import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
 import hampusborg.bankapp.application.dto.request.RecurringPaymentRequest
 import hampusborg.bankapp.application.dto.response.RecurringPaymentResponse
 import hampusborg.bankapp.application.service.base.PaymentService
-import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.RecurringPayment
 import hampusborg.bankapp.core.repository.RecurringPaymentRepository
 import org.springframework.scheduling.annotation.Scheduled
@@ -15,15 +14,12 @@ import java.util.*
 class RecurringPaymentService(
     private val recurringPaymentRepository: RecurringPaymentRepository,
     private val paymentService: PaymentService,
-    private val rateLimiterService: RateLimiterService
 ) {
 
     fun createRecurringPayment(request: RecurringPaymentRequest): RecurringPaymentResponse {
         val userId = request.userId
 
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw Exception("Too many requests, please try again later.")
-        }
+
 
         val recurringPayment = RecurringPayment(
             userId = userId,
@@ -51,9 +47,7 @@ class RecurringPaymentService(
     fun updateRecurringPayment(paymentId: String, request: RecurringPaymentRequest): RecurringPaymentResponse {
         val userId = request.userId
 
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw Exception("Too many requests, please try again later.")
-        }
+
 
         val recurringPayment = recurringPaymentRepository.findById(paymentId).orElseThrow {
             throw IllegalArgumentException("Recurring payment not found")

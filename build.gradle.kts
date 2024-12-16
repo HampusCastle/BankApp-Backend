@@ -40,23 +40,21 @@ dependencies {
     // Resilience4j for fault tolerance
     implementation("io.github.resilience4j:resilience4j-kotlin:1.7.1")
 
+    //QRCode generator
+    implementation("com.google.zxing:core:3.5.1")
+    implementation("com.google.zxing:javase:3.5.1")
+
     // Doten impl for env. variables
     implementation ("io.github.cdimascio:dotenv-kotlin:6.2.2")
+
     // Servlet API
     implementation("javax.servlet:javax.servlet-api:4.0.1")
-
-    // Swagger Impl
-    implementation ("io.springfox:springfox-boot-starter:3.0.0")
 
     // AOP Dependency for logging
     implementation ("org.springframework.boot:spring-boot-starter-aop")
 
-    // OpenAPI for API documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
-
-    // RateLimiting
-    implementation("io.github.resilience4j:resilience4j-ratelimiter:1.7.1")
-    implementation("io.github.resilience4j:resilience4j-spring-boot2:1.7.1")
+    //  SWAGGER
+    implementation("org.springdoc:springdoc-openapi-ui:1.6.6")
 
     // Lombok for reducing boilerplate code
     compileOnly("org.projectlombok:lombok")

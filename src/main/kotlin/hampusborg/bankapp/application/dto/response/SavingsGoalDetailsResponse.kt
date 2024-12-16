@@ -8,5 +8,6 @@ data class SavingsGoalDetailsResponse(
     val userId: String,
     val targetAmount: Double,
     val targetDate: LocalDate,
-    val currentAmount: Double
+    val currentAmount: Double,
+    val accountId: String
 )

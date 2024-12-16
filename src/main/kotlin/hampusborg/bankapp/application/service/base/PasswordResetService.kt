@@ -14,7 +14,7 @@ class PasswordResetService(
     private val userService: UserService,
     private val mailSender: JavaMailSender
 ) {
-    private val tokenExpirationTime = 3600000L
+    private val tokenExpirationTime = 3600000L // Token expiration time (1 hour)
 
     fun sendPasswordResetEmail(userId: String) {
         val user = userService.getUserById(userId)
@@ -22,7 +22,7 @@ class PasswordResetService(
         val resetLink = "https://yourapp.com/reset-password?token=${resetToken.token}"
 
         val message = SimpleMailMessage()
-        message.setTo(user.email)  // Use the setter to set the recipient email
+        message.setTo(user.email)
         message.subject = "Password Reset Request"
         message.text = "Click the link below to reset your password: \n$resetLink"
 
@@ -48,16 +48,17 @@ class PasswordResetService(
 
     fun resetPassword(userId: String, newPassword: String) {
         val user = userService.getUserById(userId)
-        user.password = newPassword
+        user.password = newPassword // Ensure password is hashed before saving
 
         val updateRequest = UpdateUserProfileRequest(
-            username = user.username,
+            firstName = user.firstName,
+            lastName = user.lastName,
             email = user.email,
-            password = newPassword
+            password = newPassword // Ensure password is passed
         )
 
         try {
-            userService.updateUser(userId, updateRequest)
+            userService.updateUserProfile(updateRequest)
         } catch (e: Exception) {
             throw Exception("Failed to reset password", e)
         }

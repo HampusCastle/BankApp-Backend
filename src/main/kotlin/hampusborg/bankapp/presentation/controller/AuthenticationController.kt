@@ -4,16 +4,13 @@ import hampusborg.bankapp.application.dto.request.AuthenticateUserRequest
 import hampusborg.bankapp.application.dto.request.RegisterUserRequest
 import hampusborg.bankapp.application.dto.response.AuthenticateUserResponse
 import hampusborg.bankapp.application.dto.response.RegisteredUserResponse
-import hampusborg.bankapp.application.exception.classes.AccountCreationException
-import hampusborg.bankapp.application.exception.classes.DuplicateUserException
 import hampusborg.bankapp.application.service.AuthenticationService
+import hampusborg.bankapp.application.exception.classes.DuplicateUserException
+import hampusborg.bankapp.application.exception.classes.AccountCreationException
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/auth")
@@ -27,9 +24,11 @@ class AuthenticationController(
             val response = authenticationService.registerUser(registerUserRequest)
             ResponseEntity.ok(response)
         } catch (e: DuplicateUserException) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(RegisteredUserResponse(username = "", roles = listOf(), message = "Username already exists, please choose another one"))
         } catch (e: AccountCreationException) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(RegisteredUserResponse(username = "", roles = listOf(), message = "Account creation failed, please try again"))
         }
     }
 

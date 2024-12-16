@@ -51,6 +51,7 @@ class PaymentService(
                 categoryId = initiateTransferRequest.categoryId ?: "default-category",
                 date = currentDate
             )
+
             transactionRepository.save(transaction)
 
             notificationService.createNotification(
@@ -86,6 +87,7 @@ class PaymentService(
             throw InsufficientFundsException("Insufficient balance in account ${fromAccount.id}.")
         }
     }
+
     fun handleSubscriptionPayment(request: InitiateTransferRequest, userId: String): Transaction {
         val transaction = Transaction(
             fromAccountId = request.fromAccountId,

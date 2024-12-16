@@ -1,53 +1,50 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.FetchFinancialNewsRequest
-import hampusborg.bankapp.application.dto.response.FinancialNewsDetailsResponse
-import hampusborg.bankapp.application.dto.response.ExternalNewsApiResponse
 import hampusborg.bankapp.application.exception.classes.ApiRequestException
 import hampusborg.bankapp.application.service.base.CacheHelperService
-import hampusborg.bankapp.application.service.base.RateLimiterService
+import hampusborg.bankapp.application.service.base.ExternalApiNewsHandler
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.slf4j.LoggerFactory
 
 @Service
 class FinancialNewsService(
     @Value("\${newsapi.api.key}") private val apiKey: String,
-    private val rateLimiterService: RateLimiterService,
     private val cacheHelperService: CacheHelperService,
     private val webClient: WebClient
 ) {
+    private val apiUrl = "https://newsapi.org/v2/top-headlines"
+    private val logger = LoggerFactory.getLogger(FinancialNewsService::class.java)
 
-    private val apiUrl = "https://newsapi.org/v2/everything?q=finance&apiKey=$apiKey"
-
-    fun getFinancialNews(request: FetchFinancialNewsRequest): List<FinancialNewsDetailsResponse> {
-        val userId = "financialNewsUser" // You can customize how to identify the user (e.g., from the request)
-
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw ApiRequestException("Too many requests, please try again later.")
-        }
-
+    fun fetchFinancialNews(page: Int, pageSize: Int, category: String): List<ExternalApiNewsHandler.FinancialNewsDetailsResponse> {
+        // Check if cached news exists
         val cachedNews = cacheHelperService.getFinancialNews()
         if (cachedNews.isNotEmpty()) {
+            logger.info("Returning cached financial news.")
             return cachedNews
         }
 
-        val url = "$apiUrl&category=${request.category}&page=${request.page}&pageSize=${request.pageSize}"
+        val url = "$apiUrl?apiKey=$apiKey&category=$category&page=$page&pageSize=$pageSize"
 
         return try {
+            logger.info("Fetching financial news from API: $url")
             val response = webClient.get()
                 .uri(url)
                 .retrieve()
-                .bodyToMono(ExternalNewsApiResponse::class.java)
+                .bodyToMono(ExternalApiNewsHandler.ExternalNewsApiResponse::class.java)  // Use ExternalNewsApiResponse here
                 .block()
 
-            val articles = response?.articles ?: emptyList()
+            if (response == null || response.articles.isEmpty()) {
+                throw ApiRequestException("No articles found in the API response.")
+            }
 
+            val articles = response.articles
             val financialNews = articles.map { article ->
-                FinancialNewsDetailsResponse(
+                ExternalApiNewsHandler.FinancialNewsDetailsResponse(
                     title = article.title,
-                    description = article.description ?: "No description",
-                    source = article.source.name,
+                    description = article.description ?: "No description available",
+                    source = article.source?.name ?: "Unknown source",
                     url = article.url
                 )
             }
@@ -56,6 +53,7 @@ class FinancialNewsService(
 
             financialNews
         } catch (e: Exception) {
+            logger.error("Failed to fetch financial news: ${e.message}", e)
             throw ApiRequestException("Failed to fetch financial news: ${e.message}")
         }
     }

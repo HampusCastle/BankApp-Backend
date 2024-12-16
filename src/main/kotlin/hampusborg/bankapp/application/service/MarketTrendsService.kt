@@ -3,7 +3,6 @@ package hampusborg.bankapp.application.service
 import hampusborg.bankapp.application.dto.request.GetMarketTrendsRequest
 import hampusborg.bankapp.application.dto.response.MarketTrendsDetailsResponse
 import hampusborg.bankapp.application.exception.classes.ApiRequestException
-import hampusborg.bankapp.application.service.base.RateLimiterService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
@@ -13,15 +12,12 @@ import org.springframework.web.reactive.function.client.WebClient
 class MarketTrendsService(
     @Value("\${financial.api.key}") private val financialApiKey: String,
     private val webClient: WebClient,
-    private val rateLimiterService: RateLimiterService,
 ) {
 
     fun getMarketTrends(request: GetMarketTrendsRequest): MarketTrendsDetailsResponse {
         val userId = "marketTrendsUser"
 
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw ApiRequestException("Too many requests, please try again later.")
-        }
+
 
         val url = buildUrl(request.symbol)
         return try {

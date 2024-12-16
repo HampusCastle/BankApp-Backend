@@ -4,7 +4,6 @@ import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
 import hampusborg.bankapp.application.dto.request.SendNotificationRequest
 import hampusborg.bankapp.application.dto.response.TransferStatusResponse
 import hampusborg.bankapp.application.service.base.PaymentService
-import hampusborg.bankapp.application.service.base.RateLimiterService
 import org.springframework.stereotype.Service
 
 @Service
@@ -12,13 +11,8 @@ class TransferService(
     private val paymentService: PaymentService,
     private val notificationService: NotificationService,
     private val activityLogService: ActivityLogService,
-    private val rateLimiterService: RateLimiterService,
 ) {
     fun transferFunds(initiateTransferRequest: InitiateTransferRequest, userId: String): TransferStatusResponse {
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw Exception("Too many requests, please try again later.")
-        }
-
         val transaction = paymentService.handleTransfer(initiateTransferRequest, userId)
 
         notificationService.createNotification(

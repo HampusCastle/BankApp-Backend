@@ -1,45 +1,68 @@
 package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.application.dto.request.UpdateUserProfileRequest
+import hampusborg.bankapp.application.dto.response.UpdatedUserProfileResponse
 import hampusborg.bankapp.application.exception.classes.UserNotFoundException
-import hampusborg.bankapp.application.service.base.RateLimiterService
+import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.core.domain.User
 import hampusborg.bankapp.core.repository.UserRepository
-import org.springframework.cache.annotation.Cacheable
-import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.http.ResponseEntity
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 
 @Service
 class UserService(
     private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder,
-    private val rateLimiterService: RateLimiterService
+    private val cacheHelperService: CacheHelperService
 ) {
-    fun updateUser(userId: String, updateUserProfileRequest: UpdateUserProfileRequest): User {
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw Exception("Too many requests, please try again later.")
+
+    fun updateUserProfile(updateUserProfileRequest: UpdateUserProfileRequest): ResponseEntity<UpdatedUserProfileResponse> {
+        val userId = SecurityContextHolder.getContext().authentication.principal as String
+
+        val user = userRepository.findById(userId).orElseThrow {
+            UserNotFoundException("User not found with id: $userId")
+        }
+
+        user.firstName = updateUserProfileRequest.firstName
+        user.lastName = updateUserProfileRequest.lastName
+        user.email = updateUserProfileRequest.email
+        if (updateUserProfileRequest.password.isNotEmpty()) {
+            user.password = updateUserProfileRequest.password // Hash the password before saving
+        }
+
+        val updatedUser = userRepository.save(user)
+
+        cacheHelperService.evictCache("userCache", userId)
+        cacheHelperService.storeUser(updatedUser)
+
+        val roles = updatedUser.roles.map { it.authority }
+        val response = UpdatedUserProfileResponse(
+            id = updatedUser.id,
+            username = updatedUser.username,
+            email = updatedUser.email,
+            roles = roles,
+            message = "Profile updated successfully"
+        )
+
+        return ResponseEntity.ok(response)
+    }
+
+    fun getUserProfile(userId: String): ResponseEntity<User> {
+
+        val cachedUser = cacheHelperService.getUserFromCache(userId)
+        if (cachedUser != null) {
+            return ResponseEntity.ok(cachedUser)
         }
 
         val user = userRepository.findById(userId).orElseThrow {
             UserNotFoundException("User not found with id: $userId")
         }
 
-        user.username = updateUserProfileRequest.username
-        user.email = updateUserProfileRequest.email
+        cacheHelperService.storeUser(user)
 
-        updateUserProfileRequest.password.let {
-            user.password = passwordEncoder.encode(it)
-        }
-
-        return userRepository.save(user)
+        return ResponseEntity.ok(user)
     }
-
-    @Cacheable(value = ["userCache"], key = "#userId")
     fun getUserById(userId: String): User {
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw Exception("Too many requests, please try again later.")
-        }
-
         return userRepository.findById(userId).orElseThrow {
             UserNotFoundException("User not found with id: $userId")
         }

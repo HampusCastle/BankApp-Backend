@@ -10,23 +10,34 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class JwtAuthenticationFilter(private val jwtUtil: JwtUtil) : OncePerRequestFilter() {
-    public override fun doFilterInternal(
+    override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val token = request.getHeader("Authorization")?.takeIf { it.startsWith("Bearer ") }?.substring(7)
+        val authHeader = request.getHeader("Authorization")
+        println("Authorization Header: $authHeader")
+
+        val token = authHeader?.takeIf { it.startsWith("Bearer ") }?.substring(7)
+        println("Extracted Token: $token")
 
         if (token != null) {
             try {
                 if (jwtUtil.isValidToken(token)) {
-                    val (userDetails, roles) = jwtUtil.extractUserDetails(token) ?: throw IllegalArgumentException("Invalid token details")
+                    val (userId, roles) = jwtUtil.extractUserDetails(token)
+                        ?: throw IllegalArgumentException("Invalid token details")
 
-                    val authentication = UsernamePasswordAuthenticationToken(userDetails, null, roles.map { SimpleGrantedAuthority(it) })
+                    println("UserID: $userId, Roles: $roles") // Debug log
+
+                    val authentication = UsernamePasswordAuthenticationToken(
+                        userId, null, roles.map { SimpleGrantedAuthority(it) }
+                    )
                     SecurityContextHolder.getContext().authentication = authentication
+                } else {
+                    println("Token is invalid")
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                println("Error in JWT Authentication Filter: ${e.message}")
             }
         }
 

@@ -2,7 +2,6 @@ package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
 import hampusborg.bankapp.application.service.base.PaymentService
-import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.Transaction
 import hampusborg.bankapp.core.repository.TransactionRepository
 import org.springframework.stereotype.Service
@@ -12,7 +11,6 @@ import java.time.LocalDate
 class TransactionService(
     private val transactionRepository: TransactionRepository,
     private val paymentService: PaymentService,
-    private val rateLimiterService: RateLimiterService
 ) {
 
     fun getTransactionHistory(userId: String): List<Transaction> {
@@ -20,9 +18,7 @@ class TransactionService(
     }
 
     fun performTransfer(initiateTransferRequest: InitiateTransferRequest, userId: String) {
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw Exception("Too many requests, please try again later.")
-        }
+
         paymentService.handleTransfer(initiateTransferRequest, userId)
     }
 

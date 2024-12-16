@@ -5,7 +5,6 @@ import hampusborg.bankapp.application.dto.request.SubscriptionRequest
 import hampusborg.bankapp.application.dto.response.SubscriptionResponse
 import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.application.service.base.PaymentService
-import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.domain.Subscription
 import hampusborg.bankapp.core.repository.SubscriptionRepository
 import org.springframework.stereotype.Service
@@ -14,14 +13,11 @@ import org.springframework.stereotype.Service
 class SubscriptionService(
     private val subscriptionRepository: SubscriptionRepository,
     private val paymentService: PaymentService,
-    private val rateLimiterService: RateLimiterService,
     private val cacheHelperService: CacheHelperService
 ) {
 
     fun createSubscription(request: SubscriptionRequest): SubscriptionResponse {
-        if (!rateLimiterService.isAllowed(request.userId)) {
-            throw Exception("Too many requests, please try again later.")
-        }
+
 
         val subscription = Subscription(
             userId = request.userId,
@@ -55,9 +51,7 @@ class SubscriptionService(
     }
 
     fun updateSubscription(id: String, request: SubscriptionRequest): SubscriptionResponse {
-        if (!rateLimiterService.isAllowed(request.userId)) {
-            throw Exception("Too many requests, please try again later.")
-        }
+
 
         val subscription = subscriptionRepository.findById(id).orElseThrow {
             throw IllegalArgumentException("Subscription not found")
@@ -87,9 +81,7 @@ class SubscriptionService(
             throw IllegalArgumentException("Subscription not found")
         }
 
-        if (!rateLimiterService.isAllowed(subscription.userId)) {
-            throw Exception("Too many requests, please try again later.")
-        }
+
 
         subscription.status = "canceled"
         subscriptionRepository.save(subscription)

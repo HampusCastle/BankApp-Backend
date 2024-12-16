@@ -22,11 +22,8 @@ class AccountController(
         @Valid @RequestBody createAccountRequest: CreateAccountRequest,
         @RequestHeader("Authorization") token: String
     ): ResponseEntity<AccountDetailsResponse> {
-        val userId = jwtUtil.extractUserDetails(token.substringAfter(" "))?.first
-            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
-
         return try {
-            val accountResponse = accountService.createAccount(createAccountRequest.copy(userId = userId), userId)
+            val accountResponse = accountService.createAccountWithUserValidation(createAccountRequest, token)
             ResponseEntity.ok(accountResponse)
         } catch (e: Exception) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, e.message)
@@ -38,27 +35,40 @@ class AccountController(
         @PathVariable accountId: String,
         @RequestHeader("Authorization") token: String
     ): ResponseEntity<AccountDetailsResponse> {
-        val userId = jwtUtil.extractUserDetails(token.substringAfter(" "))?.first
-            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
+        return try {
+            val account = accountService.getAccountById(accountId, token)
+            ResponseEntity.ok(account)
+        } catch (e: Exception) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found")
+        }
+    }
 
-        val account = accountService.getAccountsByUserId(userId).find { it.id == accountId }
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found")
+    @GetMapping("/{accountId}/balance")
+    fun getAccountBalance(
+        @PathVariable accountId: String,
+        @RequestHeader("Authorization") token: String
+    ): ResponseEntity<Double> {
+        return try {
+            val userId = jwtUtil.extractUserDetails(token.substringAfter(" "))?.first
+                ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
 
-        return ResponseEntity.ok(account)
+            val balance = accountService.getAccountBalance(accountId, userId)
+            ResponseEntity.ok(balance)
+        } catch (e: Exception) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found or permission denied")
+        }
     }
 
     @GetMapping("/my-accounts")
     fun getAllAccounts(
         @RequestHeader("Authorization") token: String
     ): ResponseEntity<List<AccountDetailsResponse>> {
-        val userId = jwtUtil.extractUserDetails(token.substringAfter(" "))?.first
-            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
-
-        val accounts = accountService.getAccountsByUserId(userId)
-        if (accounts.isEmpty()) {
+        return try {
+            val accounts = accountService.getAllAccountsByUser(token)
+            ResponseEntity.ok(accounts)
+        } catch (e: Exception) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "No accounts found")
         }
-        return ResponseEntity.ok(accounts)
     }
 
     @DeleteMapping("/{accountId}")
@@ -66,12 +76,10 @@ class AccountController(
         @PathVariable accountId: String,
         @RequestHeader("Authorization") token: String
     ): ResponseEntity<String> {
-        val userId = jwtUtil.extractUserDetails(token.substringAfter(" "))?.first
-            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
-
-        return if (accountService.deleteAccount(accountId, userId)) {
+        return try {
+            accountService.deleteAccount(accountId, token)
             ResponseEntity.ok("Account deleted successfully")
-        } else {
+        } catch (e: Exception) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found")
         }
     }

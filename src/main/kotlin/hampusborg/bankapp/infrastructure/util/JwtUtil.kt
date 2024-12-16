@@ -31,12 +31,17 @@ class JwtUtil {
         val claims = Jwts.claims().setSubject(username)
         claims["userId"] = userId
         claims["roles"] = roles
+
+        println("Generating token with claims: $claims")
+
+
         return Jwts.builder()
             .setClaims(claims)
             .setIssuedAt(Date(System.currentTimeMillis()))
             .setExpiration(Date(System.currentTimeMillis() + expiration))
             .signWith(getSigningKey())
-            .compact()
+            .compact().also {
+                println("Token: $it") }
     }
 
     fun extractUserDetails(token: String): Pair<String?, List<String>>? {
@@ -44,6 +49,7 @@ class JwtUtil {
             val claims = extractAllClaims(token)
             val roles = (claims["roles"] as? List<*>)?.map { it.toString() } ?: emptyList()
             val userId = claims["userId"] as? String
+            println("Extracted UserID: $userId, Roles: $roles") // Debug log
             Pair(userId, roles)
         } catch (e: Exception) {
             println("Error extracting user details: ${e.message}")

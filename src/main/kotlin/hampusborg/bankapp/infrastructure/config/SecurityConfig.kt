@@ -27,9 +27,9 @@ class SecurityConfig( private val jwtUtil: JwtUtil) {
             .cors { cors ->
                 cors.configurationSource {
                     CorsConfiguration().apply {
-                        allowedOrigins = listOf("http://localhost:3000")
+                        allowedOrigins = listOf("http://localhost:3000", "http://localhost:8000")
                         allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                        allowedHeaders = listOf("Authorization", "Content-Type", "*")
+                        allowedHeaders = listOf("Authorization", "Content-Type", "X-Requested-With", "*")
                         allowCredentials = true
                     }
                 }
@@ -38,6 +38,7 @@ class SecurityConfig( private val jwtUtil: JwtUtil) {
                 authRequest
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/auth/register", "/auth/login").permitAll()
+                    .requestMatchers("/users/**").authenticated()
                     .anyRequest().authenticated()
             }
             .addFilterBefore(JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter::class.java)

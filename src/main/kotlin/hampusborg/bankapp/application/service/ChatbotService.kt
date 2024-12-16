@@ -1,59 +1,47 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.response.FinancialNewsDetailsResponse
 import hampusborg.bankapp.application.dto.response.MarketTrendsDetailsResponse
 import hampusborg.bankapp.application.dto.response.ScheduledPaymentDetailsResponse
 import hampusborg.bankapp.application.dto.response.TransactionHistoryDetailsResponse
 import hampusborg.bankapp.application.service.base.CacheHelperService
-import hampusborg.bankapp.application.service.base.RateLimiterService
+import hampusborg.bankapp.application.service.base.ExternalApiNewsHandler
 import org.springframework.stereotype.Service
 
 @Service
 class ChatbotService(
-    private val rateLimiterService: RateLimiterService,
     private val cacheHelperService: CacheHelperService
 ) {
 
     fun getTransactionHistory(userId: String): TransactionHistoryDetailsResponse {
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw RuntimeException("Too many requests, please try again later.")
-        }
+
 
         return cacheHelperService.getTransactionHistory(userId)
     }
 
     fun getMarketTrends(userId: String): MarketTrendsDetailsResponse {
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw RuntimeException("Too many requests, please try again later.")
-        }
+
 
         return cacheHelperService.getMarketTrends(userId)
     }
 
     fun getScheduledPayments(userId: String): ScheduledPaymentDetailsResponse {
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw RuntimeException("Too many requests, please try again later.")
-        }
+
 
         return cacheHelperService.getScheduledPayments(userId)
     }
 
     fun getAccountInfo(userId: String): String {
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw RuntimeException("Too many requests, please try again later.")
-        }
+
 
         return cacheHelperService.getAccountInfo(userId)
     }
 
-    fun getFinancialNews(): List<FinancialNewsDetailsResponse> {
+    fun getFinancialNews(): List<ExternalApiNewsHandler.FinancialNewsDetailsResponse> {
         return cacheHelperService.getFinancialNews()  // Use cacheHelperService to get financial news
     }
 
     fun getChatbotResponse(query: String, userId: String): String {
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw RuntimeException("Too many requests, please try again later.")
-        }
+
 
         return when {
             query.contains("saldo", ignoreCase = true) -> getAccountInfo(userId)

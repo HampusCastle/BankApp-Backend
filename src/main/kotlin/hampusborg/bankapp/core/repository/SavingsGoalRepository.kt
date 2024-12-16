@@ -6,6 +6,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface SavingsGoalRepository : MongoRepository<SavingsGoal, String> {
-    fun findAllByUserId(userId: String): List<SavingsGoal>
-
+    fun findByUserId(userId: String): List<SavingsGoal>
 }

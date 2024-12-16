@@ -1,6 +1,6 @@
 package hampusborg.bankapp.infrastructure.config
 
-import hampusborg.bankapp.core.domain.Role
+import hampusborg.bankapp.core.domain.enums.Role
 import hampusborg.bankapp.core.domain.User
 import hampusborg.bankapp.core.repository.UserRepository
 import jakarta.annotation.PostConstruct
@@ -19,7 +19,9 @@ class ApplicationStartup(
                 username = "admin",
                 password = passwordEncoder.encode("admin123"),
                 email = "admin@admin.com",
-                roles = listOf(Role.ADMIN)
+                roles = listOf(Role.ADMIN),
+                firstName = "Admin",
+                lastName = "Admin",
             )
             userRepository.save(adminUser)
 
@@ -28,7 +30,9 @@ class ApplicationStartup(
                     username = "user$index",
                     password = passwordEncoder.encode("user$index"),
                     email = "user$index@example.com",
-                    roles = listOf(Role.USER)
+                    roles = listOf(Role.USER),
+                    firstName = "User",
+                    lastName = "User",
                 )
             }
             userRepository.saveAll(regularUsers)

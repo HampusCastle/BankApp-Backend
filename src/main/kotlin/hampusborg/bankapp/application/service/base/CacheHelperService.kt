@@ -1,9 +1,11 @@
 package hampusborg.bankapp.application.service.base
 
 import hampusborg.bankapp.application.dto.response.*
+import hampusborg.bankapp.application.exception.classes.NoTransactionsFoundException
 import hampusborg.bankapp.application.exception.classes.UserNotFoundException
 import hampusborg.bankapp.core.domain.*
 import hampusborg.bankapp.core.repository.*
+import hampusborg.bankapp.core.util.AccountUtils
 import org.springframework.cache.CacheManager
 import org.springframework.stereotype.Service
 
@@ -26,7 +28,18 @@ class CacheHelperService(
     private fun <T> putCache(cacheName: String, key: String, value: T) {
         val cache = cacheManager.getCache(cacheName)
         cache?.put(key, value)
+        println("Cache updated: $cacheName with key: $key, value: $value")  // Add logging here
     }
+
+    fun getUserFromCache(userId: String): User? {
+        return getCache("userCache", userId, User::class.java)
+    }
+
+    fun storeUser(user: User) {
+        putCache("userCache", user.id!!, user)
+    }
+
+
 
     fun getSavingsGoal(id: String): SavingsGoal? {
         return getCache("savingsGoals", id, SavingsGoal::class.java)
@@ -46,7 +59,7 @@ class CacheHelperService(
     }
 
     private fun loadSavingsGoalsByUserIdFromDbAndCache(userId: String): List<SavingsGoal> {
-        val savingsGoals = savingsGoalRepository.findAllByUserId(userId)
+        val savingsGoals = savingsGoalRepository.findByUserId(userId)
         putCache("userSavingsGoals", userId, savingsGoals)
         return savingsGoals
     }
@@ -65,9 +78,9 @@ class CacheHelperService(
         val accountDetails = accounts.map { account ->
             AccountDetailsResponse(
                 id = account.id ?: "",
-                name = account.accountType,
+                name = account.name,
                 balance = account.balance,
-                accountType = account.accountType,
+                accountType = account.accountType.name,
                 userId = account.userId
             )
         }
@@ -80,21 +93,29 @@ class CacheHelperService(
             ?: loadMonthlyExpensesFromDbAndCache(userId)
     }
 
-    fun storeMonthlyExpenses(userId: String, expensesSummary: ExpensesSummaryResponse) {
+    fun cacheMonthlyExpenses(userId: String, expensesSummary: ExpensesSummaryResponse) {
         putCache("monthlyExpenses", userId, expensesSummary)
     }
 
     private fun loadMonthlyExpensesFromDbAndCache(userId: String): ExpensesSummaryResponse {
-        val accounts = accountRepository.findByUserId(userId)
-        val transactions = mutableListOf<Transaction>()
-        for (account in accounts) {
-            transactions.addAll(transactionRepository.findByFromAccountId(account.id ?: ""))
-            transactions.addAll(transactionRepository.findByToAccountId(account.id ?: ""))
+        val transactions = transactionRepository.findByFromAccountId(userId) + transactionRepository.findByToAccountId(userId)
+
+        if (transactions.isEmpty()) {
+            throw NoTransactionsFoundException("No transactions found for user ID: $userId")
         }
 
         val expensesSummary = calculateExpensesSummary(transactions)
-        putCache("monthlyExpenses", userId, expensesSummary)
+
+        cacheMonthlyExpenses(userId, expensesSummary)
+
         return expensesSummary
+    }
+
+    private fun calculateExpensesSummary(transactions: List<Transaction>): ExpensesSummaryResponse {
+        val totalExpenses = transactions.sumOf { it.amount }
+        val categories = transactions.groupBy { it.categoryId }
+            .mapValues { (_, txns) -> txns.sumOf { it.amount } }
+        return ExpensesSummaryResponse(totalExpenses, categories)
     }
 
     fun getSubscriptionById(id: String): Subscription {
@@ -190,6 +211,14 @@ class CacheHelperService(
             ?: loadAccountInfoFromDbAndCache(userId)
     }
 
+    fun storeAccountsByUserId(userId: String, accounts: List<Account>) {
+        val currentAccounts = getCache("userAccounts", userId, List::class.java) as? List<AccountDetailsResponse> ?: emptyList()
+
+        val updatedAccounts = (currentAccounts + accounts.map { AccountUtils.mapToAccountDetailsResponse(it) }).toList()
+
+        putCache("userAccounts", userId, updatedAccounts)
+    }
+
     private fun loadAccountInfoFromDbAndCache(userId: String): String {
         val accounts = accountRepository.findByUserId(userId)
         val info = "User has ${accounts.size} accounts"
@@ -197,23 +226,16 @@ class CacheHelperService(
         return info
     }
 
-    fun getFinancialNews(): List<FinancialNewsDetailsResponse> {
+    fun getFinancialNews(): List<ExternalApiNewsHandler.FinancialNewsDetailsResponse> {
         val cachedNews = getCache("financialNews", "allNews", List::class.java)
         return if (cachedNews is List<*>) {
-            cachedNews.filterIsInstance<FinancialNewsDetailsResponse>()
+            cachedNews.filterIsInstance<ExternalApiNewsHandler.FinancialNewsDetailsResponse>()
         } else {
             emptyList()
         }
     }
 
-    private fun calculateExpensesSummary(transactions: List<Transaction>): ExpensesSummaryResponse {
-        val totalExpenses = transactions.sumOf { it.amount }
-        val categories = transactions.groupBy { it.categoryId }
-            .mapValues { (_, txns) -> txns.sumOf { it.amount } }
-        return ExpensesSummaryResponse(totalExpenses, categories)
-    }
-
-    fun storeFinancialNews(news: List<FinancialNewsDetailsResponse>) {
+    fun storeFinancialNews(news: List<ExternalApiNewsHandler.FinancialNewsDetailsResponse>) {
         putCache("financialNews", "allNews", news)
     }
 

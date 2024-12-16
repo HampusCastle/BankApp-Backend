@@ -29,15 +29,21 @@ class LoggingAspect {
         logger.info("After executing method: $methodName")
     }
 
-    @AfterThrowing(pointcut = "execution(* hampusborg.bankapp.presentation.controller.*.*(..)) || execution(* hampusborg.bankapp.application.service.*.*(..))", throwing = "exception")
+    @AfterThrowing(
+        pointcut = "execution(* hampusborg.bankapp.presentation.controller.*.*(..)) || execution(* hampusborg.bankapp.application.service.*.*(..))",
+        throwing = "exception"
+    )
     fun logAfterMethodThrowsException(joinPoint: JoinPoint, exception: Throwable) {
         val methodName = joinPoint.signature.name
         logger.error("Method: $methodName threw an exception: ${exception.message}")
     }
 
-    @AfterReturning(pointcut = "execution(* hampusborg.bankapp.presentation.controller.*.*(..)) || execution(* hampusborg.bankapp.application.service.*.*(..))", returning = "result")
-    fun logAfterMethodReturn(joinPoint: JoinPoint, result: Any) {
-        val methodName = joinPoint.signature.name
-        logger.info("Method: $methodName returned: $result")
+    @AfterReturning(pointcut = "execution(* hampusborg.bankapp..*(..))", returning = "result")
+    fun logAfterMethodReturn(joinPoint: JoinPoint, result: Any?) {
+        if (result == null) {
+            logger.warn("Method ${joinPoint.signature.name} returned null")
+        } else {
+            logger.info("Method ${joinPoint.signature.name} returned: $result")
+        }
     }
 }

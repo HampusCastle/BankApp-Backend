@@ -1,16 +1,17 @@
 package hampusborg.bankapp.infrastructure.config
 
+import org.springdoc.core.GroupedOpenApi
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.web.reactive.function.client.WebClient
 
 @Configuration
-class WebClientConfig {
+class SwaggerConfig {
 
     @Bean
-    fun webClient(): WebClient {
-        return WebClient.builder()
-            .baseUrl("https://www.alphavantage.co")
+    fun publicApi(): GroupedOpenApi {
+        return GroupedOpenApi.builder()
+            .group("public")
+            .pathsToMatch("/**")
             .build()
     }
 }

@@ -5,7 +5,6 @@ import hampusborg.bankapp.application.dto.response.SavingsProgressSummaryRespons
 import hampusborg.bankapp.application.exception.classes.NoTransactionsFoundException
 import hampusborg.bankapp.application.exception.classes.UserNotFoundException
 import hampusborg.bankapp.application.service.base.CacheHelperService
-import hampusborg.bankapp.application.service.base.RateLimiterService
 import hampusborg.bankapp.core.repository.SavingsGoalRepository
 import hampusborg.bankapp.core.repository.TransactionRepository
 import org.springframework.stereotype.Service
@@ -13,17 +12,19 @@ import org.springframework.stereotype.Service
 @Service
 class BudgetService(
     private val transactionRepository: TransactionRepository,
-    private val savingsGoalRepository: SavingsGoalRepository,
-    private val rateLimiterService: RateLimiterService,
-    private val cacheHelperService: CacheHelperService
+    private val cacheHelperService: CacheHelperService,
+    private val savingsGoalRepository: SavingsGoalRepository
 ) {
+
     fun getMonthlyExpenses(userId: String): ExpensesSummaryResponse {
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw RuntimeException("Too many requests, please try again later.")
+
+
+        val cachedExpenses = cacheHelperService.getMonthlyExpenses(userId)
+        if (cachedExpenses != null) {
+            return cachedExpenses
         }
 
-        return cacheHelperService.getMonthlyExpenses(userId)
-            ?: loadMonthlyExpensesAndCache(userId)
+        return loadMonthlyExpensesAndCache(userId)
     }
 
     private fun loadMonthlyExpensesAndCache(userId: String): ExpensesSummaryResponse {
@@ -34,20 +35,15 @@ class BudgetService(
         }
 
         val totalExpenses = transactions.sumOf { it.amount }
-        val categories = transactions.groupBy { it.categoryId }
-            .mapValues { (_, txns) -> txns.sumOf { it.amount } }
+        val expensesSummary = ExpensesSummaryResponse(totalExpenses)
 
-        val expensesResponse = ExpensesSummaryResponse(totalExpenses, categories)
+        cacheHelperService.cacheMonthlyExpenses(userId, expensesSummary)
 
-        cacheHelperService.storeMonthlyExpenses(userId, expensesResponse)
-
-        return expensesResponse
+        return expensesSummary
     }
 
     fun getSavingsProgress(userId: String, savingsGoalId: String): SavingsProgressSummaryResponse {
-        if (!rateLimiterService.isAllowed(userId)) {
-            throw RuntimeException("Too many requests, please try again later.")
-        }
+
 
         val savingsGoal = savingsGoalRepository.findById(savingsGoalId).orElseThrow {
             UserNotFoundException("Savings goal not found for user: $userId")
