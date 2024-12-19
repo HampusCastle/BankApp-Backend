@@ -10,17 +10,16 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
+private val logger: Logger = LoggerFactory.getLogger(LoggingAspect::class.java)
 @Aspect
 @Component
 class LoggingAspect {
 
-    private val logger: Logger = LoggerFactory.getLogger(LoggingAspect::class.java)
-
-    @Before("execution(* hampusborg.bankapp.presentation.controller.*.*(..)) || execution(* hampusborg.bankapp.application.service.*.*(..))")
+    @Before("execution(* hampusborg.bankapp.*.*(..))")
     fun logBeforeMethodExecution(joinPoint: JoinPoint) {
         val methodName = joinPoint.signature.name
-        val args = joinPoint.args.joinToString(", ") { it.toString() }
-        logger.info("Before executing method: $methodName with arguments: $args")
+        val arguments = joinPoint.args.joinToString(", ") { it?.toString() ?: "null" }
+        logger.info("Method: $methodName with arguments: $arguments")
     }
 
     @After("execution(* hampusborg.bankapp.presentation.controller.*.*(..)) || execution(* hampusborg.bankapp.application.service.*.*(..))")

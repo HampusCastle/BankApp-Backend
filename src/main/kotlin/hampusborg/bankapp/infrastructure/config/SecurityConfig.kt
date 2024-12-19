@@ -4,17 +4,15 @@ import hampusborg.bankapp.infrastructure.filter.JwtAuthenticationFilter
 import hampusborg.bankapp.infrastructure.util.JwtUtil
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder
+import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.web.cors.CorsConfiguration
 
 @Configuration
-@EnableWebSecurity
-class SecurityConfig( private val jwtUtil: JwtUtil) {
+class SecurityConfig(private val jwtUtil: JwtUtil) {
 
     @Bean
     fun passwordEncoder(): PasswordEncoder {
@@ -22,26 +20,27 @@ class SecurityConfig( private val jwtUtil: JwtUtil) {
     }
 
     @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    fun securityWebFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         http.csrf { it.disable() }
             .cors { cors ->
                 cors.configurationSource {
                     CorsConfiguration().apply {
-                        allowedOrigins = listOf("http://localhost:3000", "http://localhost:8000")
+                        allowedOrigins = listOf("http://localhost:5173", "http://localhost:8080")
                         allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                         allowedHeaders = listOf("Authorization", "Content-Type", "X-Requested-With", "*")
                         allowCredentials = true
                     }
                 }
             }
-            .authorizeHttpRequests { authRequest ->
+            .authorizeExchange { authRequest ->
                 authRequest
-                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                    .requestMatchers("/auth/register", "/auth/login").permitAll()
-                    .requestMatchers("/users/**").authenticated()
-                    .anyRequest().authenticated()
+                    .pathMatchers("/auth/register", "/auth/login").permitAll()
+                    .pathMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                    .pathMatchers("/users/**").authenticated()
+                    .anyExchange().authenticated()
             }
-            .addFilterBefore(JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter::class.java)
+
+        http.addFilterAt(JwtAuthenticationFilter(jwtUtil), SecurityWebFiltersOrder.AUTHENTICATION)
 
         return http.build()
     }

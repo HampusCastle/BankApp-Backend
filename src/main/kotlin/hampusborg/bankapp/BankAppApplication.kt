@@ -1,21 +1,14 @@
 package hampusborg.bankapp
 
 import io.github.cdimascio.dotenv.Dotenv
-import io.swagger.v3.oas.annotations.OpenAPIDefinition
-import io.swagger.v3.oas.annotations.info.Info
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.cache.annotation.EnableCaching
+import org.springframework.web.reactive.config.EnableWebFlux
 
 @SpringBootApplication
 @EnableCaching
-@OpenAPIDefinition(
-    info = Info(
-        title = "BankApp API",
-        description = "API Documentation for BankApp",
-        version = "1.0"
-    )
-)
+@EnableWebFlux
 class BankAppApplication
 
 fun main(args: Array<String>) {

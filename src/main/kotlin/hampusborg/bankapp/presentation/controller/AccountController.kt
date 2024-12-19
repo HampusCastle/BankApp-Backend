@@ -1,7 +1,11 @@
 package hampusborg.bankapp.presentation.controller
 
+import hampusborg.bankapp.application.dto.request.AddFundsToAccountRequest
 import hampusborg.bankapp.application.dto.request.CreateAccountRequest
+import hampusborg.bankapp.application.dto.request.WithdrawFundsRequest
 import hampusborg.bankapp.application.dto.response.AccountDetailsResponse
+import hampusborg.bankapp.application.dto.response.AccountUpdatedResponse
+import hampusborg.bankapp.application.dto.response.WithdrawFundsResponse
 import hampusborg.bankapp.application.service.AccountService
 import hampusborg.bankapp.infrastructure.util.JwtUtil
 import jakarta.validation.Valid
@@ -68,6 +72,34 @@ class AccountController(
             ResponseEntity.ok(accounts)
         } catch (e: Exception) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "No accounts found")
+        }
+    }
+
+    @PostMapping("/{accountId}/add-funds")
+    fun addFundsToAccount(
+        @PathVariable accountId: String,
+        @Valid @RequestBody addFundsRequest: AddFundsToAccountRequest,
+        @RequestHeader("Authorization") token: String
+    ): ResponseEntity<AccountUpdatedResponse> {
+        return try {
+            val response = accountService.addFundsToAccount(accountId, addFundsRequest.amount, token)
+            ResponseEntity.ok(response)
+        } catch (e: Exception) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, e.message)
+        }
+    }
+
+    @PostMapping("/{accountId}/withdraw")
+    fun withdrawFundsFromAccount(
+        @PathVariable accountId: String,
+        @Valid @RequestBody withdrawRequest: WithdrawFundsRequest,
+        @RequestHeader("Authorization") token: String
+    ): ResponseEntity<WithdrawFundsResponse> {
+        return try {
+            val response = accountService.withdrawFundsFromAccount(accountId, withdrawRequest.amount, token)
+            ResponseEntity.ok(response)
+        } catch (e: Exception) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, e.message)
         }
     }
 

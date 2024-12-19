@@ -2,45 +2,38 @@ package hampusborg.bankapp.infrastructure.filter
 
 import hampusborg.bankapp.infrastructure.util.JwtUtil
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.web.filter.OncePerRequestFilter
-import jakarta.servlet.FilterChain
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
+import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.web.server.ServerWebExchange
+import org.springframework.web.server.WebFilter
+import org.springframework.web.server.WebFilterChain
+import reactor.core.publisher.Mono
 
-class JwtAuthenticationFilter(private val jwtUtil: JwtUtil) : OncePerRequestFilter() {
-    override fun doFilterInternal(
-        request: HttpServletRequest,
-        response: HttpServletResponse,
-        filterChain: FilterChain
-    ) {
-        val authHeader = request.getHeader("Authorization")
-        println("Authorization Header: $authHeader")
+class JwtAuthenticationFilter(private val jwtUtil: JwtUtil) : WebFilter {
 
+    override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
+        val authHeader = exchange.request.headers.getFirst("Authorization")
         val token = authHeader?.takeIf { it.startsWith("Bearer ") }?.substring(7)
-        println("Extracted Token: $token")
 
         if (token != null) {
-            try {
+            return try {
                 if (jwtUtil.isValidToken(token)) {
                     val (userId, roles) = jwtUtil.extractUserDetails(token)
                         ?: throw IllegalArgumentException("Invalid token details")
 
-                    println("UserID: $userId, Roles: $roles") // Debug log
-
                     val authentication = UsernamePasswordAuthenticationToken(
                         userId, null, roles.map { SimpleGrantedAuthority(it) }
                     )
-                    SecurityContextHolder.getContext().authentication = authentication
+                    return chain.filter(exchange)
+                        .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication))
                 } else {
-                    println("Token is invalid")
+                    Mono.error(IllegalArgumentException("Invalid token"))
                 }
             } catch (e: Exception) {
-                println("Error in JWT Authentication Filter: ${e.message}")
+                Mono.error(IllegalArgumentException("Error in JWT Authentication Filter: ${e.message}"))
             }
         }
 
-        filterChain.doFilter(request, response)
+        return chain.filter(exchange)
     }
 }

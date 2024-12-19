@@ -4,9 +4,11 @@ import hampusborg.bankapp.application.dto.request.CreateSavingsGoalRequest
 import hampusborg.bankapp.application.dto.response.SavingsGoalDetailsResponse
 import hampusborg.bankapp.application.exception.classes.SavingsGoalNotFoundException
 import hampusborg.bankapp.application.service.base.CacheHelperService
+import hampusborg.bankapp.application.service.base.PaymentService
 import hampusborg.bankapp.core.domain.Account
 import hampusborg.bankapp.core.domain.SavingsGoal
 import hampusborg.bankapp.core.domain.enums.AccountType
+import hampusborg.bankapp.core.domain.enums.TransactionCategory
 import hampusborg.bankapp.core.repository.AccountRepository
 import hampusborg.bankapp.core.repository.SavingsGoalRepository
 import org.springframework.stereotype.Service
@@ -17,7 +19,8 @@ import java.time.LocalDateTime
 class SavingsGoalService(
     private val savingsGoalRepository: SavingsGoalRepository,
     private val accountRepository: AccountRepository,
-    private val cacheHelperService: CacheHelperService
+    private val cacheHelperService: CacheHelperService,
+    private val paymentService: PaymentService
 ) {
 
     fun createSavingsGoal(request: CreateSavingsGoalRequest): SavingsGoalDetailsResponse {
@@ -40,23 +43,49 @@ class SavingsGoalService(
         )
         val savedSavingsGoal = savingsGoalRepository.save(savingsGoal)
 
+        paymentService.logTransaction(
+            fromAccountId = "SYSTEM",
+            toAccountId = savedAccount.id!!,
+            userId = request.userId,
+            amount = 0.0,
+            category = TransactionCategory.SAVINGS_GOAL
+        )
+
         cacheHelperService.storeSavingsGoal(savedSavingsGoal.id!!, savedSavingsGoal)
 
-        return SavingsGoalDetailsResponse(
-            id = savedSavingsGoal.id,
-            name = savedSavingsGoal.name,
-            userId = savedSavingsGoal.userId,
-            targetAmount = savedSavingsGoal.targetAmount,
-            targetDate = savedSavingsGoal.targetDate,
-            currentAmount = savedSavingsGoal.currentAmount,
-            accountId = savedSavingsGoal.accountId
-        )
+        return mapToResponse(savedSavingsGoal)
     }
 
-    fun getSavingsGoal(id: String): SavingsGoalDetailsResponse {
+    fun updateSavingsGoal(id: String, updatedFields: Map<String, Any>): SavingsGoalDetailsResponse {
         val savingsGoal = savingsGoalRepository.findById(id).orElseThrow {
             SavingsGoalNotFoundException("Savings goal not found for ID: $id")
         }
+
+        updatedFields["currentAmount"]?.let {
+            val previousAmount = savingsGoal.currentAmount
+            savingsGoal.currentAmount = (it as Number).toDouble()
+
+            paymentService.logTransaction(
+                fromAccountId = "USER_INPUT",
+                toAccountId = savingsGoal.accountId,
+                userId = savingsGoal.userId,
+                amount = savingsGoal.currentAmount - previousAmount,
+                category = TransactionCategory.SAVINGS_GOAL
+            )
+        }
+
+        updatedFields["targetAmount"]?.let { savingsGoal.targetAmount = (it as Number).toDouble() }
+        updatedFields["targetDate"]?.let { savingsGoal.targetDate = LocalDate.parse(it as String) }
+        updatedFields["name"]?.let { savingsGoal.name = it as String }
+
+        val updatedSavingsGoal = savingsGoalRepository.save(savingsGoal)
+
+        cacheHelperService.storeSavingsGoal(updatedSavingsGoal.id!!, updatedSavingsGoal)
+
+        return mapToResponse(updatedSavingsGoal)
+    }
+
+    private fun mapToResponse(savingsGoal: SavingsGoal): SavingsGoalDetailsResponse {
         return SavingsGoalDetailsResponse(
             id = savingsGoal.id!!,
             name = savingsGoal.name,
@@ -68,44 +97,15 @@ class SavingsGoalService(
         )
     }
 
-    fun getSavingsGoalsByUserId(userId: String): List<SavingsGoalDetailsResponse> {
-        val savingsGoals = savingsGoalRepository.findByUserId(userId)
-        return savingsGoals.map {
-            SavingsGoalDetailsResponse(
-                id = it.id!!,
-                name = it.name,
-                userId = it.userId,
-                targetAmount = it.targetAmount,
-                targetDate = it.targetDate,
-                currentAmount = it.currentAmount,
-                accountId = it.accountId
-            )
-        }
-    }
-
-    fun updateSavingsGoal(id: String, updatedFields: Map<String, Any>): SavingsGoalDetailsResponse {
+    fun getSavingsGoal(id: String): SavingsGoalDetailsResponse {
         val savingsGoal = savingsGoalRepository.findById(id).orElseThrow {
             SavingsGoalNotFoundException("Savings goal not found for ID: $id")
         }
+        return mapToResponse(savingsGoal)
+    }
 
-        updatedFields["name"]?.let { savingsGoal.name = it as String }
-        updatedFields["targetAmount"]?.let { savingsGoal.targetAmount = (it as Number).toDouble() }
-        updatedFields["targetDate"]?.let { savingsGoal.targetDate = LocalDate.parse(it as String) }
-        updatedFields["currentAmount"]?.let { savingsGoal.currentAmount = (it as Number).toDouble() }
-
-        val updatedSavingsGoal = savingsGoalRepository.save(savingsGoal)
-
-        cacheHelperService.storeSavingsGoal(updatedSavingsGoal.id!!, updatedSavingsGoal)
-
-        return SavingsGoalDetailsResponse(
-            id = updatedSavingsGoal.id,
-            name = updatedSavingsGoal.name,
-            userId = updatedSavingsGoal.userId,
-            targetAmount = updatedSavingsGoal.targetAmount,
-            targetDate = updatedSavingsGoal.targetDate,
-            currentAmount = updatedSavingsGoal.currentAmount,
-            accountId = updatedSavingsGoal.accountId
-        )
+    fun getSavingsGoalsByUserId(userId: String): List<SavingsGoalDetailsResponse> {
+        return savingsGoalRepository.findByUserId(userId).map { mapToResponse(it) }
     }
 
     fun deleteSavingsGoal(id: String) {

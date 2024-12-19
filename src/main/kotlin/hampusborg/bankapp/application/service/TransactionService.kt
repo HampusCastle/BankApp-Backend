@@ -1,39 +1,57 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
-import hampusborg.bankapp.application.service.base.PaymentService
 import hampusborg.bankapp.core.domain.Transaction
 import hampusborg.bankapp.core.repository.TransactionRepository
+import hampusborg.bankapp.core.domain.enums.TransactionCategory
 import org.springframework.stereotype.Service
 import java.time.LocalDate
+import org.slf4j.LoggerFactory
 
 @Service
 class TransactionService(
-    private val transactionRepository: TransactionRepository,
-    private val paymentService: PaymentService,
+    private val transactionRepository: TransactionRepository
 ) {
+    private val logger = LoggerFactory.getLogger(TransactionService::class.java)
 
-    fun getTransactionHistory(userId: String): List<Transaction> {
-        return transactionRepository.findByFromAccountId(userId) + transactionRepository.findByToAccountId(userId)
-    }
+    fun getTransactionsByAccountId(userId: String, accountId: String): List<Transaction> {
+        logger.info("Fetching transactions for accountId: $accountId and userId: $userId")
 
-    fun performTransfer(initiateTransferRequest: InitiateTransferRequest, userId: String) {
+        val transactionsFromAccount = transactionRepository.findByFromAccountId(accountId)
+        val transactionsToAccount = transactionRepository.findByToAccountId(accountId)
 
-        paymentService.handleTransfer(initiateTransferRequest, userId)
+        logger.debug("Found ${transactionsFromAccount.size} transactions from account.")
+        logger.debug("Found ${transactionsToAccount.size} transactions to account.")
+
+        return transactionsFromAccount + transactionsToAccount
     }
 
     fun getFilteredTransactions(
         userId: String,
-        fromDate: LocalDate,
-        toDate: LocalDate,
-        minAmount: Double,
-        maxAmount: Double
+        fromDate: LocalDate? = null,
+        toDate: LocalDate? = null,
+        category: TransactionCategory? = null,
+        minAmount: Double? = null,
+        maxAmount: Double? = null,
+        accountId: String
     ): List<Transaction> {
-        val transactions = transactionRepository.findByFromAccountId(userId) + transactionRepository.findByToAccountId(userId)
+        logger.info("Filtering transactions for userId: $userId, accountId: $accountId")
 
-        return transactions.filter {
-            val transactionDate = LocalDate.parse(it.date)
-            it.amount in minAmount..maxAmount && !transactionDate.isBefore(fromDate) && !transactionDate.isAfter(toDate)
+        val transactions = getTransactionsByAccountId(userId, accountId)
+
+        logger.debug("Filtering transactions based on provided criteria.")
+
+        return transactions.filter { transaction ->
+            val transactionDate = LocalDate.parse(transaction.date) // Use LocalDate to parse the date
+            val isWithinDate = (fromDate == null || !transactionDate.isBefore(fromDate)) &&
+                    (toDate == null || !transactionDate.isAfter(toDate))
+
+            val isWithinCategory = category == null || transaction.categoryId == category
+            val isWithinAmount = (minAmount == null || transaction.amount >= minAmount) &&
+                    (maxAmount == null || transaction.amount <= maxAmount)
+
+            isWithinDate && isWithinCategory && isWithinAmount
+        }.also {
+            logger.debug("Filtered ${it.size} transactions.")
         }
     }
 }

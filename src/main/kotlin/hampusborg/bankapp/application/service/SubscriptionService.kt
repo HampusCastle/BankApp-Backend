@@ -37,7 +37,7 @@ class SubscriptionService(
             fromAccountId = request.fromAccountId ?: "",
             toAccountId = savedSubscription.toAccountId,
             amount = savedSubscription.amount,
-            categoryId = savedSubscription.categoryId
+            categoryId = savedSubscription.categoryId ?: "DEFAULT" // Default value if null
         )
 
         paymentService.handleSubscriptionPayment(paymentRequest, savedSubscription.userId)
@@ -68,7 +68,7 @@ class SubscriptionService(
             fromAccountId = request.fromAccountId ?: "",
             toAccountId = updatedSubscription.toAccountId,
             amount = updatedSubscription.amount,
-            categoryId = updatedSubscription.categoryId
+            categoryId = updatedSubscription.categoryId ?: "DEFAULT" // Default value if null
         )
 
         paymentService.handleSubscriptionPayment(paymentRequest, updatedSubscription.userId)

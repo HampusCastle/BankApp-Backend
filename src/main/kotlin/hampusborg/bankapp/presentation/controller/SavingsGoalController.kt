@@ -25,6 +25,12 @@ class SavingsGoalController(
         return ResponseEntity.ok(savingsGoals)
     }
 
+    @GetMapping("/{id}")
+    fun getSavingsGoalById(@PathVariable id: String): ResponseEntity<SavingsGoalDetailsResponse> {
+        val goal = savingsGoalService.getSavingsGoal(id)
+        return ResponseEntity.ok(goal)
+    }
+
     @GetMapping("/user/{userId}")
     fun getSavingsGoalsByUserId(@PathVariable userId: String): ResponseEntity<List<SavingsGoalDetailsResponse>> {
         val goals = savingsGoalService.getSavingsGoalsByUserId(userId)

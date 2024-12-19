@@ -18,7 +18,6 @@ class FinancialNewsService(
     private val logger = LoggerFactory.getLogger(FinancialNewsService::class.java)
 
     fun fetchFinancialNews(page: Int, pageSize: Int, category: String): List<ExternalApiNewsHandler.FinancialNewsDetailsResponse> {
-        // Check if cached news exists
         val cachedNews = cacheHelperService.getFinancialNews()
         if (cachedNews.isNotEmpty()) {
             logger.info("Returning cached financial news.")

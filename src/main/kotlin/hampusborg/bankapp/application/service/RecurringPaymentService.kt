@@ -5,6 +5,7 @@ import hampusborg.bankapp.application.dto.request.RecurringPaymentRequest
 import hampusborg.bankapp.application.dto.response.RecurringPaymentResponse
 import hampusborg.bankapp.application.service.base.PaymentService
 import hampusborg.bankapp.core.domain.RecurringPayment
+import hampusborg.bankapp.core.domain.enums.TransactionCategory
 import hampusborg.bankapp.core.repository.RecurringPaymentRepository
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -17,90 +18,81 @@ class RecurringPaymentService(
 ) {
 
     fun createRecurringPayment(request: RecurringPaymentRequest): RecurringPaymentResponse {
-        val userId = request.userId
-
-
-
         val recurringPayment = RecurringPayment(
-            userId = userId,
+            userId = request.userId,
             amount = request.amount,
             fromAccountId = request.fromAccountId,
             toAccountId = request.toAccountId,
             interval = request.interval,
-            categoryId = request.categoryId,
+            categoryId = TransactionCategory.RECURRING_PAYMENT,
             nextPaymentDate = System.currentTimeMillis(),
             status = "active"
         )
-
-        val savedPayment = recurringPaymentRepository.save(recurringPayment)
-
-        return mapToResponse(savedPayment)
+        return mapToResponse(recurringPaymentRepository.save(recurringPayment))
     }
 
     fun getRecurringPaymentById(id: String): RecurringPaymentResponse {
         val payment = recurringPaymentRepository.findById(id).orElseThrow {
-            throw IllegalArgumentException("Recurring payment not found for ID: $id")
+            IllegalArgumentException("Recurring payment not found for ID: $id")
         }
         return mapToResponse(payment)
     }
 
     fun updateRecurringPayment(paymentId: String, request: RecurringPaymentRequest): RecurringPaymentResponse {
-        val userId = request.userId
-
-
-
         val recurringPayment = recurringPaymentRepository.findById(paymentId).orElseThrow {
-            throw IllegalArgumentException("Recurring payment not found")
+            IllegalArgumentException("Recurring payment not found")
         }
 
-        recurringPayment.amount = request.amount
-        recurringPayment.interval = request.interval
-        recurringPayment.toAccountId = request.toAccountId
-        recurringPayment.categoryId = request.categoryId
+        recurringPayment.apply {
+            amount = request.amount
+            interval = request.interval
+            toAccountId = request.toAccountId
+        }
 
-        val updatedPayment = recurringPaymentRepository.save(recurringPayment)
-
-        return mapToResponse(updatedPayment)
+        return mapToResponse(recurringPaymentRepository.save(recurringPayment))
     }
 
     fun cancelRecurringPayment(paymentId: String) {
         val recurringPayment = recurringPaymentRepository.findById(paymentId).orElseThrow {
-            throw IllegalArgumentException("Recurring payment not found")
+            IllegalArgumentException("Recurring payment not found")
         }
         recurringPayment.status = "canceled"
         recurringPaymentRepository.save(recurringPayment)
     }
 
     fun getRecurringPaymentsByUserId(userId: String): List<RecurringPaymentResponse> {
-        val payments = recurringPaymentRepository.findByUserId(userId)
-        return payments.map { mapToResponse(it) }
+        return recurringPaymentRepository.findByUserId(userId).map { mapToResponse(it) }
     }
 
     @Scheduled(cron = "0 0 0 * * *")
     fun processDueRecurringPayments() {
         val now = System.currentTimeMillis()
-        val paymentsDue = recurringPaymentRepository.findByNextPaymentDateBeforeAndStatus(now, "active")
-
-        paymentsDue.forEach { recurringPayment ->
-            processPayment(recurringPayment)
-        }
+        recurringPaymentRepository.findByNextPaymentDateBeforeAndStatus(now, "active")
+            .forEach { processPayment(it) }
     }
 
     private fun processPayment(recurringPayment: RecurringPayment) {
         val transferRequest = createTransferRequest(recurringPayment)
+
         paymentService.handleTransfer(transferRequest, recurringPayment.userId)
+        paymentService.logTransaction(
+            fromAccountId = recurringPayment.fromAccountId,
+            toAccountId = recurringPayment.toAccountId,
+            userId = recurringPayment.userId,
+            amount = recurringPayment.amount,
+            category = TransactionCategory.RECURRING_PAYMENT
+        )
+
         recurringPayment.nextPaymentDate = calculateNextPaymentDate(recurringPayment.interval)
         recurringPaymentRepository.save(recurringPayment)
     }
 
-    private fun createTransferRequest(recurringPayment: RecurringPayment): InitiateTransferRequest {
-        return InitiateTransferRequest(
-            fromAccountId = recurringPayment.fromAccountId,
-            toAccountId = recurringPayment.toAccountId,
-            amount = recurringPayment.amount,
-            categoryId = recurringPayment.categoryId
-        )
-    }
+    private fun createTransferRequest(recurringPayment: RecurringPayment) = InitiateTransferRequest(
+        fromAccountId = recurringPayment.fromAccountId,
+        toAccountId = recurringPayment.toAccountId,
+        amount = recurringPayment.amount,
+        categoryId = TransactionCategory.RECURRING_PAYMENT.name // Pass category as String
+    )
 
     private fun calculateNextPaymentDate(interval: String): Long {
         val calendar = Calendar.getInstance()
@@ -112,17 +104,15 @@ class RecurringPaymentService(
         return calendar.timeInMillis
     }
 
-    private fun mapToResponse(payment: RecurringPayment): RecurringPaymentResponse {
-        return RecurringPaymentResponse(
-            id = payment.id ?: "",
-            userId = payment.userId,
-            amount = payment.amount,
-            fromAccountId = payment.fromAccountId,
-            toAccountId = payment.toAccountId,
-            interval = payment.interval,
-            status = payment.status,
-            categoryId = payment.categoryId,
-            nextPaymentDate = payment.nextPaymentDate
-        )
-    }
+    private fun mapToResponse(payment: RecurringPayment) = RecurringPaymentResponse(
+        id = payment.id ?: "",
+        userId = payment.userId,
+        amount = payment.amount,
+        fromAccountId = payment.fromAccountId,
+        toAccountId = payment.toAccountId,
+        interval = payment.interval,
+        status = payment.status,
+        categoryId = payment.categoryId.name,
+        nextPaymentDate = payment.nextPaymentDate
+    )
 }

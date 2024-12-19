@@ -113,8 +113,9 @@ class CacheHelperService(
 
     private fun calculateExpensesSummary(transactions: List<Transaction>): ExpensesSummaryResponse {
         val totalExpenses = transactions.sumOf { it.amount }
-        val categories = transactions.groupBy { it.categoryId }
+        val categories = transactions.groupBy { it.categoryId.name }
             .mapValues { (_, txns) -> txns.sumOf { it.amount } }
+
         return ExpensesSummaryResponse(totalExpenses, categories)
     }
 

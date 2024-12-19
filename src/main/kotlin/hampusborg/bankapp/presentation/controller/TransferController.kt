@@ -14,23 +14,16 @@ class TransferController(
     private val transferService: TransferService,
     private val jwtUtil: JwtUtil
 ) {
+
     @PostMapping
     fun transferFunds(
-        @Valid @RequestBody initiateTransferRequest: InitiateTransferRequest,
+        @Valid @RequestBody transferRequest: InitiateTransferRequest,
         @RequestHeader("Authorization") token: String
     ): ResponseEntity<TransferStatusResponse> {
-        val userDetails = jwtUtil.extractUserDetails(token.substringAfter(" "))
-        val userId = userDetails?.first
+        val userId = jwtUtil.extractUserDetails(token.substringAfter(" "))?.first
+            ?: throw IllegalArgumentException("Invalid token")
 
-        return if (userId != null) {
-            try {
-                val transferStatus = transferService.transferFunds(initiateTransferRequest, userId)
-                ResponseEntity.ok(transferStatus)
-            } catch (e: RuntimeException) {
-                ResponseEntity.badRequest().body(TransferStatusResponse(message = "Transfer failed", status = "failed"))
-            }
-        } else {
-            ResponseEntity.badRequest().body(TransferStatusResponse(message = "User ID could not be extracted from token", status = "failed"))
-        }
+        val response = transferService.transferFunds(transferRequest, userId)
+        return ResponseEntity.ok(response)
     }
 }

@@ -1,16 +1,17 @@
 package hampusborg.bankapp.core.domain
 
+import hampusborg.bankapp.core.domain.enums.TransactionCategory
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 
 @Document
 data class Transaction(
-    @Id var id: String? = null,
+    @Id val id: String? = null,
     val fromAccountId: String,
     val toAccountId: String,
     val userId: String,
-    val date : String,
     val amount: Double,
     val timestamp: Long,
-    val categoryId: String
+    val categoryId: TransactionCategory,
+    val date: String
 )
