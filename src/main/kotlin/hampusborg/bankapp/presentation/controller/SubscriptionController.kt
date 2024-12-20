@@ -23,14 +23,6 @@ class SubscriptionController(
         return subscriptionService.getSubscriptionById(id)
     }
 
-    @PutMapping("/{id}")
-    fun updateSubscription(
-        @PathVariable id: String,
-        @RequestBody request: SubscriptionRequest
-    ): SubscriptionResponse {
-        return subscriptionService.updateSubscription(id, request)
-    }
-
     @DeleteMapping("/{id}")
     fun cancelSubscription(@PathVariable id: String) {
         subscriptionService.cancelSubscription(id)

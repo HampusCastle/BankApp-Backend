@@ -16,8 +16,8 @@ class TransactionService(
     fun getTransactionsByAccountId(userId: String, accountId: String): List<Transaction> {
         logger.info("Fetching transactions for accountId: $accountId and userId: $userId")
 
-        val transactionsFromAccount = transactionRepository.findByFromAccountId(accountId)
-        val transactionsToAccount = transactionRepository.findByToAccountId(accountId)
+        val transactionsFromAccount = transactionRepository.findByFromAccountIdAndUserId(accountId, userId)
+        val transactionsToAccount = transactionRepository.findByToAccountIdAndUserId(accountId, userId)
 
         logger.debug("Found ${transactionsFromAccount.size} transactions from account.")
         logger.debug("Found ${transactionsToAccount.size} transactions to account.")

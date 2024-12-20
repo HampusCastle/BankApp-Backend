@@ -3,10 +3,13 @@ package hampusborg.bankapp.application.service
 import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
 import hampusborg.bankapp.application.dto.request.SubscriptionRequest
 import hampusborg.bankapp.application.dto.response.SubscriptionResponse
+import hampusborg.bankapp.application.exception.classes.ApiRequestException
 import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.application.service.base.PaymentService
 import hampusborg.bankapp.core.domain.Subscription
+import hampusborg.bankapp.core.domain.enums.TransactionCategory
 import hampusborg.bankapp.core.repository.SubscriptionRepository
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 
 @Service
@@ -18,13 +21,15 @@ class SubscriptionService(
 
     fun createSubscription(request: SubscriptionRequest): SubscriptionResponse {
 
+        val userId = SecurityContextHolder.getContext().authentication?.name
+            ?: throw ApiRequestException("User is not authenticated")
 
         val subscription = Subscription(
-            userId = request.userId,
+            userId = userId,
             amount = request.amount,
             serviceName = request.serviceName,
             interval = request.interval,
-            categoryId = request.categoryId ?: "",
+            categoryId = TransactionCategory.SUBSCRIPTIONS.name,
             nextPaymentDate = System.currentTimeMillis(),
             status = "active",
             fromAccountId = request.fromAccountId ?: "",
@@ -37,7 +42,7 @@ class SubscriptionService(
             fromAccountId = request.fromAccountId ?: "",
             toAccountId = savedSubscription.toAccountId,
             amount = savedSubscription.amount,
-            categoryId = savedSubscription.categoryId ?: "DEFAULT" // Default value if null
+            categoryId = savedSubscription.categoryId
         )
 
         paymentService.handleSubscriptionPayment(paymentRequest, savedSubscription.userId)
@@ -46,49 +51,28 @@ class SubscriptionService(
     }
 
     fun getSubscriptionById(id: String): SubscriptionResponse {
-        val subscription = cacheHelperService.getSubscriptionById(id)  // Use CacheHelperService for caching
+        val subscription = cacheHelperService.getSubscriptionById(id)
         return mapToResponse(subscription)
     }
 
-    fun updateSubscription(id: String, request: SubscriptionRequest): SubscriptionResponse {
-
-
-        val subscription = subscriptionRepository.findById(id).orElseThrow {
-            throw IllegalArgumentException("Subscription not found")
-        }
-
-        subscription.amount = request.amount
-        subscription.interval = request.interval
-        subscription.serviceName = request.serviceName
-        subscription.categoryId = request.categoryId ?: subscription.categoryId
-
-        val updatedSubscription = subscriptionRepository.save(subscription)
-
-        val paymentRequest = InitiateTransferRequest(
-            fromAccountId = request.fromAccountId ?: "",
-            toAccountId = updatedSubscription.toAccountId,
-            amount = updatedSubscription.amount,
-            categoryId = updatedSubscription.categoryId ?: "DEFAULT" // Default value if null
-        )
-
-        paymentService.handleSubscriptionPayment(paymentRequest, updatedSubscription.userId)
-
-        return mapToResponse(updatedSubscription)
-    }
-
     fun cancelSubscription(id: String) {
+        val userId = SecurityContextHolder.getContext().authentication?.name
+            ?: throw ApiRequestException("User is not authenticated")
+
         val subscription = subscriptionRepository.findById(id).orElseThrow {
             throw IllegalArgumentException("Subscription not found")
         }
 
-
+        if (subscription.userId != userId) {
+            throw ApiRequestException("User does not have permission to cancel this subscription")
+        }
 
         subscription.status = "canceled"
         subscriptionRepository.save(subscription)
     }
 
     fun getSubscriptionsByUserId(userId: String): List<SubscriptionResponse> {
-        val subscriptions = cacheHelperService.getSubscriptionsByUserId(userId)  // Use CacheHelperService for caching
+        val subscriptions = cacheHelperService.getSubscriptionsByUserId(userId)
         return subscriptions.map { mapToResponse(it) }
     }
 

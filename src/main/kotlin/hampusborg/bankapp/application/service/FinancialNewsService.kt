@@ -5,14 +5,14 @@ import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.application.service.base.ExternalApiNewsHandler
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.client.RestTemplate
 import org.slf4j.LoggerFactory
 
 @Service
 class FinancialNewsService(
     @Value("\${newsapi.api.key}") private val apiKey: String,
     private val cacheHelperService: CacheHelperService,
-    private val webClient: WebClient
+    private val restTemplate: RestTemplate
 ) {
     private val apiUrl = "https://newsapi.org/v2/top-headlines"
     private val logger = LoggerFactory.getLogger(FinancialNewsService::class.java)
@@ -28,11 +28,7 @@ class FinancialNewsService(
 
         return try {
             logger.info("Fetching financial news from API: $url")
-            val response = webClient.get()
-                .uri(url)
-                .retrieve()
-                .bodyToMono(ExternalApiNewsHandler.ExternalNewsApiResponse::class.java)  // Use ExternalNewsApiResponse here
-                .block()
+            val response = restTemplate.getForObject(url, ExternalApiNewsHandler.ExternalNewsApiResponse::class.java)
 
             if (response == null || response.articles.isEmpty()) {
                 throw ApiRequestException("No articles found in the API response.")

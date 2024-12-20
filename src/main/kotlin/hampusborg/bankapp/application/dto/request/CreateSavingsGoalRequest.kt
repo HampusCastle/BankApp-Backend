@@ -9,9 +9,6 @@ data class CreateSavingsGoalRequest(
     @field:NotEmpty(message = "Goal name cannot be empty")
     val name: String,
 
-    @field:NotEmpty(message = "User ID cannot be empty")
-    val userId: String,
-
     @field:NotNull(message = "Target amount cannot be null")
     @field:Min(value = 1, message = "Target amount must be greater than 0")
     val targetAmount: Double,

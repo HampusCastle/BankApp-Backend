@@ -4,20 +4,18 @@ import hampusborg.bankapp.application.dto.request.GetMarketTrendsRequest
 import hampusborg.bankapp.application.dto.response.MarketTrendsDetailsResponse
 import hampusborg.bankapp.application.exception.classes.ApiRequestException
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
-import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.client.RestTemplate
 
 @Service
 class MarketTrendsService(
     @Value("\${financial.api.key}") private val financialApiKey: String,
-    private val webClient: WebClient,
+    private val restTemplate: RestTemplate 
 ) {
+
 
     fun getMarketTrends(request: GetMarketTrendsRequest): MarketTrendsDetailsResponse {
         val userId = "marketTrendsUser"
-
-
 
         val url = buildUrl(request.symbol)
         return try {
@@ -43,15 +41,9 @@ class MarketTrendsService(
     }
 
     private fun fetchMarketData(url: String): Map<String, Map<String, String>> {
-        val response = webClient.get()
-            .uri(url)
-            .retrieve()
-            .bodyToMono(object : ParameterizedTypeReference<Map<String, Map<String, String>>>() {})
-            .block()
+        val response = restTemplate.getForObject(url, Map::class.java) as Map<String, Map<String, String>>?
+            ?: throw ApiRequestException("Empty response from API")
 
-        if (response == null) {
-            throw ApiRequestException("Empty response from API")
-        }
         return response
     }
 

@@ -1,5 +1,6 @@
 package hampusborg.bankapp.core.domain
 
+import hampusborg.bankapp.core.domain.enums.TransactionCategory
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 
@@ -10,7 +11,7 @@ data class Subscription(
     var amount: Double,
     var serviceName: String,
     var interval: String,
-    var categoryId: String?,
+    var categoryId: String = TransactionCategory.SUBSCRIPTIONS.name,
     var nextPaymentDate: Long,
     var status: String,
     val fromAccountId: String,

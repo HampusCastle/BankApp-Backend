@@ -6,6 +6,7 @@ import hampusborg.bankapp.application.exception.classes.UserNotFoundException
 import hampusborg.bankapp.core.domain.*
 import hampusborg.bankapp.core.repository.*
 import hampusborg.bankapp.core.util.AccountUtils
+import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
 import org.springframework.stereotype.Service
 
@@ -20,6 +21,8 @@ class CacheHelperService(
     private val scheduledPaymentRepository: ScheduledPaymentRepository
 ) {
 
+    private val log = LoggerFactory.getLogger(CacheHelperService::class.java)
+
     private fun <T> getCache(cacheName: String, key: String, clazz: Class<T>): T? {
         val cache = cacheManager.getCache(cacheName)
         return cache?.get(key, clazz)
@@ -28,7 +31,7 @@ class CacheHelperService(
     private fun <T> putCache(cacheName: String, key: String, value: T) {
         val cache = cacheManager.getCache(cacheName)
         cache?.put(key, value)
-        println("Cache updated: $cacheName with key: $key, value: $value")  // Add logging here
+        println("Cache updated: $cacheName with key: $key, value: $value")
     }
 
     fun getUserFromCache(userId: String): User? {
@@ -38,8 +41,6 @@ class CacheHelperService(
     fun storeUser(user: User) {
         putCache("userCache", user.id!!, user)
     }
-
-
 
     fun getSavingsGoal(id: String): SavingsGoal? {
         return getCache("savingsGoals", id, SavingsGoal::class.java)
@@ -98,23 +99,40 @@ class CacheHelperService(
     }
 
     private fun loadMonthlyExpensesFromDbAndCache(userId: String): ExpensesSummaryResponse {
-        val transactions = transactionRepository.findByFromAccountId(userId) + transactionRepository.findByToAccountId(userId)
+        val transactions = loadTransactionsByAccountIdAndUserId(userId, userId)
 
         if (transactions.isEmpty()) {
             throw NoTransactionsFoundException("No transactions found for user ID: $userId")
         }
 
         val expensesSummary = calculateExpensesSummary(transactions)
-
         cacheMonthlyExpenses(userId, expensesSummary)
-
         return expensesSummary
+    }
+
+    private fun loadTransactionsByAccountIdAndUserId(userId: String, accountId: String): List<Transaction> {
+        log.info("Fetching transactions for userId: $userId and accountId: $accountId")
+
+        val transactionsFromAccount = transactionRepository.findByFromAccountIdAndUserId(accountId, userId)
+        val transactionsToAccount = transactionRepository.findByToAccountIdAndUserId(accountId, userId)
+
+        log.debug("Found ${transactionsFromAccount.size} transactions from the account.")
+        log.debug("Found ${transactionsToAccount.size} transactions to the account.")
+
+        val transactions = transactionsFromAccount + transactionsToAccount
+        if (transactions.isEmpty()) {
+            log.warn("No transactions found for accountId: $accountId and userId: $userId")
+        }
+
+        return transactions
     }
 
     private fun calculateExpensesSummary(transactions: List<Transaction>): ExpensesSummaryResponse {
         val totalExpenses = transactions.sumOf { it.amount }
         val categories = transactions.groupBy { it.categoryId.name }
             .mapValues { (_, txns) -> txns.sumOf { it.amount } }
+
+        log.debug("Calculated expenses: total = $totalExpenses, categories = $categories")
 
         return ExpensesSummaryResponse(totalExpenses, categories)
     }
@@ -164,7 +182,8 @@ class CacheHelperService(
     }
 
     private fun loadTransactionHistoryFromDbAndCache(userId: String): TransactionHistoryDetailsResponse {
-        val transactions = transactionRepository.findByFromAccountId(userId) + transactionRepository.findByToAccountId(userId)
+        val transactions = transactionRepository.findByFromAccountIdAndUserId(userId, userId) +
+                transactionRepository.findByToAccountIdAndUserId(userId, userId)
 
         val history = transactions.map {
             Pair(it.id ?: "", it.amount)
@@ -175,7 +194,6 @@ class CacheHelperService(
         )
 
         putCache("transactionHistory", userId, response)
-
         return response
     }
 

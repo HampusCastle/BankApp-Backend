@@ -2,6 +2,7 @@ package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.application.dto.request.CreateSavingsGoalRequest
 import hampusborg.bankapp.application.dto.response.SavingsGoalDetailsResponse
+import hampusborg.bankapp.application.exception.classes.InvalidAccountException
 import hampusborg.bankapp.application.exception.classes.SavingsGoalNotFoundException
 import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.application.service.base.PaymentService
@@ -23,9 +24,9 @@ class SavingsGoalService(
     private val paymentService: PaymentService
 ) {
 
-    fun createSavingsGoal(request: CreateSavingsGoalRequest): SavingsGoalDetailsResponse {
+    fun createSavingsGoal(request: CreateSavingsGoalRequest, userId: String): SavingsGoalDetailsResponse {
         val account = Account(
-            userId = request.userId,
+            userId = userId,
             name = request.name,
             balance = 0.0,
             accountType = AccountType.SAVINGS,
@@ -35,7 +36,7 @@ class SavingsGoalService(
 
         val savingsGoal = SavingsGoal(
             name = request.name,
-            userId = request.userId,
+            userId = userId,
             targetAmount = request.targetAmount,
             targetDate = request.targetDate,
             accountId = savedAccount.id!!,
@@ -44,9 +45,9 @@ class SavingsGoalService(
         val savedSavingsGoal = savingsGoalRepository.save(savingsGoal)
 
         paymentService.logTransaction(
-            fromAccountId = "SYSTEM",
+            fromAccountId = "DEPOSIT",
             toAccountId = savedAccount.id!!,
-            userId = request.userId,
+            userId = userId,
             amount = 0.0,
             category = TransactionCategory.SAVINGS_GOAL
         )
@@ -59,6 +60,13 @@ class SavingsGoalService(
     fun updateSavingsGoal(id: String, updatedFields: Map<String, Any>): SavingsGoalDetailsResponse {
         val savingsGoal = savingsGoalRepository.findById(id).orElseThrow {
             SavingsGoalNotFoundException("Savings goal not found for ID: $id")
+        }
+
+        val account = accountRepository.findById(savingsGoal.accountId).orElseThrow {
+            InvalidAccountException("Account not found for ID: ${savingsGoal.accountId}")
+        }
+        if (account.accountType != AccountType.SAVINGS) {
+            throw InvalidAccountException("The account linked to this savings goal must be a SAVINGS account.")
         }
 
         updatedFields["currentAmount"]?.let {
@@ -105,6 +113,9 @@ class SavingsGoalService(
     }
 
     fun getSavingsGoalsByUserId(userId: String): List<SavingsGoalDetailsResponse> {
+        println("Fetching savings goals for userId: $userId")
+        val savingsGoals = savingsGoalRepository.findByUserId(userId)
+        println("Found savings goals: $savingsGoals")
         return savingsGoalRepository.findByUserId(userId).map { mapToResponse(it) }
     }
 

@@ -3,9 +3,10 @@ package hampusborg.bankapp.presentation.controller
 import hampusborg.bankapp.application.dto.request.CreateSavingsGoalRequest
 import hampusborg.bankapp.application.dto.response.SavingsGoalDetailsResponse
 import hampusborg.bankapp.application.service.SavingsGoalService
-import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import jakarta.validation.Valid
+import org.springframework.security.core.Authentication
 
 @RestController
 @RequestMapping("/savings-goals")
@@ -14,15 +15,21 @@ class SavingsGoalController(
 ) {
 
     @PostMapping
-    fun createSavingsGoal(@Valid @RequestBody request: CreateSavingsGoalRequest): ResponseEntity<SavingsGoalDetailsResponse> {
-        val createdGoal = savingsGoalService.createSavingsGoal(request)
+    fun createSavingsGoal(@Valid @RequestBody request: CreateSavingsGoalRequest, authentication: Authentication): ResponseEntity<SavingsGoalDetailsResponse> {
+        val userId = authentication.principal as String
+
+        val createdGoal = savingsGoalService.createSavingsGoal(request, userId)
         return ResponseEntity.ok(createdGoal)
     }
 
     @GetMapping("/user/{userId}/savings-goals")
     fun getSavingsGoalsByUser(@PathVariable userId: String): ResponseEntity<List<SavingsGoalDetailsResponse>> {
         val savingsGoals = savingsGoalService.getSavingsGoalsByUserId(userId)
-        return ResponseEntity.ok(savingsGoals)
+        return if (savingsGoals.isNotEmpty()) {
+            ResponseEntity.ok(savingsGoals)
+        } else {
+            ResponseEntity.noContent().build()
+        }
     }
 
     @GetMapping("/{id}")

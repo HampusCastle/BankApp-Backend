@@ -1,5 +1,6 @@
 package hampusborg.bankapp.core.domain.enums
 
+
 enum class TransactionCategory {
     ADDED_FUNDS,
     WITHDRAW_FUNDS,
@@ -9,5 +10,11 @@ enum class TransactionCategory {
     SUBSCRIPTIONS,
     RECURRING_PAYMENT,
     SAVINGS_GOAL,
-    OTHER
+    OTHER,
+    GROCERIES,
+    ENTERTAINMENT,
+    UTILITIES,
+    RENT,
+    FOOD,
+    TRANSPORT
 }

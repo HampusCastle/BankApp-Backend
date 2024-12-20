@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import java.time.LocalDateTime
 
-@Document
+@Document(collection = "accounts")
 data class Account(
     @Id val id: String? = null,
 

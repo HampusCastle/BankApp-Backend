@@ -1,7 +1,6 @@
 package hampusborg.bankapp.application.dto.request
 
 data class SubscriptionRequest(
-    val userId: String,
     val amount: Double,
     val serviceName: String,
     val interval: String,
