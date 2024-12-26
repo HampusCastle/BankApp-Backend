@@ -1,60 +1,81 @@
 package hampusborg.bankapp.application.service
 
-import hampusborg.bankapp.application.dto.response.MarketTrendsDetailsResponse
-import hampusborg.bankapp.application.dto.response.ScheduledPaymentDetailsResponse
-import hampusborg.bankapp.application.dto.response.TransactionHistoryDetailsResponse
-import hampusborg.bankapp.application.service.base.CacheHelperService
-import hampusborg.bankapp.application.service.base.ExternalApiNewsHandler
+import hampusborg.bankapp.application.dto.request.GetMarketTrendsRequest
+import hampusborg.bankapp.application.dto.response.ChatbotResponse
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class ChatbotService(
-    private val cacheHelperService: CacheHelperService
+    private val accountService: AccountService,
+    private val transactionService: TransactionService,
+    private val marketTrendsService: MarketTrendsService,
+    private val scheduledPaymentService: ScheduledPaymentService
 ) {
 
-    fun getTransactionHistory(userId: String): TransactionHistoryDetailsResponse {
+    private val log = LoggerFactory.getLogger(ChatbotService::class.java)
 
-
-        return cacheHelperService.getTransactionHistory(userId)
-    }
-
-    fun getMarketTrends(userId: String): MarketTrendsDetailsResponse {
-
-
-        return cacheHelperService.getMarketTrends(userId)
-    }
-
-    fun getScheduledPayments(userId: String): ScheduledPaymentDetailsResponse {
-
-
-        return cacheHelperService.getScheduledPayments(userId)
-    }
-
-    fun getAccountInfo(userId: String): String {
-
-
-        return cacheHelperService.getAccountInfo(userId)
-    }
-
-    fun getFinancialNews(): List<ExternalApiNewsHandler.FinancialNewsDetailsResponse> {
-        return cacheHelperService.getFinancialNews()  // Use cacheHelperService to get financial news
-    }
-
-    fun getChatbotResponse(query: String, userId: String): String {
-
-
-        return when {
-            query.contains("saldo", ignoreCase = true) -> getAccountInfo(userId)
-            query.contains("transaktioner", ignoreCase = true) -> getTransactionHistory(userId).history
-            query.contains("konto", ignoreCase = true) -> getAccountInfo(userId)
-            query.contains("planerade betalningar", ignoreCase = true) -> getScheduledPayments(userId).message
-            query.contains("trender", ignoreCase = true) -> getMarketTrends(userId).let {
-                "Market Trend: ${it.trend}\nCurrent Price: ${it.price} SEK\nVolume: ${it.volume}\nChange: ${it.changePercent} %"
+    fun getChatbotResponse(query: String, userId: String): ChatbotResponse {
+        return try {
+            when {
+                query.contains("balance", ignoreCase = true) -> getAccountBalances(userId)
+                query.contains("transactions", ignoreCase = true) -> getTransactionHistory(userId)
+                query.contains("scheduled payments", ignoreCase = true) -> getScheduledPayments(userId)
+                query.contains("market trends", ignoreCase = true) -> getMarketTrends(query)
+                else -> {
+                    log.warn("Unrecognized query '$query' for user '$userId'")
+                    ChatbotResponse("Help", "I didn't understand your query. Please try again.")
+                }
             }
-            query.contains("nyheter", ignoreCase = true) -> getFinancialNews().joinToString("\n") {
-                "Title: ${it.title}\nDescription: ${it.description}\nSource: ${it.source}\nURL: ${it.url}\n"
-            }
-            else -> "Jag förstår inte din fråga. Försök att ställa en annan fråga."
+        } catch (e: Exception) {
+            log.error("Error processing chatbot query '$query' for user '$userId': ${e.message}", e)
+            ChatbotResponse("Error", "An unexpected error occurred while processing your query.")
         }
+    }
+
+    private fun getAccountBalances(userId: String): ChatbotResponse {
+        val accounts = accountService.getAllAccountsByUser(userId)
+        if (accounts.isEmpty()) log.info("No accounts found for user: $userId")
+
+        val response = accounts.joinToString("\n") {
+            "Account ID: ${it.id}, Balance: ${it.balance}, Type: ${it.accountType}"
+        }
+        return ChatbotResponse("Account Balances", response.ifEmpty { "No accounts found." })
+    }
+
+    private fun getTransactionHistory(userId: String): ChatbotResponse {
+        val transactions = transactionService.getTransactionsByUser(userId)
+        if (transactions.isEmpty()) log.info("No transactions found for user: $userId")
+
+        val response = transactions.take(10).joinToString("\n") {
+            "Transaction ID: ${it.id}, Amount: ${it.amount}, Date: ${it.date}"
+        } + if (transactions.size > 10) "\n...and more" else ""
+
+        return ChatbotResponse("Transaction History", response.ifEmpty { "No transactions found." })
+    }
+
+    private fun getScheduledPayments(userId: String): ChatbotResponse {
+        val payments = scheduledPaymentService.getScheduledPaymentsByUser(userId)
+        if (payments.isEmpty()) log.info("No scheduled payments found for user: $userId")
+
+        val response = payments.joinToString("\n") {
+            "Payment ID: ${it.id}, Amount: ${it.amount}, Next Payment Date: ${it.nextPaymentDate}"
+        }
+        return ChatbotResponse("Scheduled Payments", response.ifEmpty { "No scheduled payments found." })
+    }
+
+    private fun getMarketTrends(query: String): ChatbotResponse {
+        val symbols = listOf("AAPL", "IBM", "GOOG", "MSFT", "AMZN")
+        val symbol = symbols.firstOrNull { query.contains(it, ignoreCase = true) } ?: "AAPL"
+
+        val trends = marketTrendsService.getMarketTrends(GetMarketTrendsRequest(symbol = symbol))
+        val response = """
+        Symbol: $symbol (defaulted to AAPL if unspecified)
+        Market Trend: ${trends.trend}
+        Current Price: ${trends.price} SEK
+        Change: ${trends.changePercent} %
+        """.trimIndent()
+
+        return ChatbotResponse("Market Trends for $symbol", response)
     }
 }

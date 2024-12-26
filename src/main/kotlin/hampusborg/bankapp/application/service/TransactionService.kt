@@ -3,15 +3,22 @@ package hampusborg.bankapp.application.service
 import hampusborg.bankapp.core.domain.Transaction
 import hampusborg.bankapp.core.repository.TransactionRepository
 import hampusborg.bankapp.core.domain.enums.TransactionCategory
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDate
-import org.slf4j.LoggerFactory
 
 @Service
 class TransactionService(
     private val transactionRepository: TransactionRepository
 ) {
     private val logger = LoggerFactory.getLogger(TransactionService::class.java)
+
+    fun getTransactionsByUser(userId: String): List<Transaction> {
+        logger.info("Fetching transactions for userId: $userId")
+        val transactions = transactionRepository.findByUserId(userId)
+        logger.debug("Found ${transactions.size} transactions for userId: $userId")
+        return transactions
+    }
 
     fun getTransactionsByAccountId(userId: String, accountId: String): List<Transaction> {
         logger.info("Fetching transactions for accountId: $accountId and userId: $userId")
@@ -41,7 +48,7 @@ class TransactionService(
         logger.debug("Filtering transactions based on provided criteria.")
 
         return transactions.filter { transaction ->
-            val transactionDate = LocalDate.parse(transaction.date) // Use LocalDate to parse the date
+            val transactionDate = LocalDate.parse(transaction.date)
             val isWithinDate = (fromDate == null || !transactionDate.isBefore(fromDate)) &&
                     (toDate == null || !transactionDate.isAfter(toDate))
 

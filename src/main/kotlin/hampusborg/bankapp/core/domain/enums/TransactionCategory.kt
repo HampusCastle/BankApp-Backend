@@ -11,10 +11,4 @@ enum class TransactionCategory {
     RECURRING_PAYMENT,
     SAVINGS_GOAL,
     OTHER,
-    GROCERIES,
-    ENTERTAINMENT,
-    UTILITIES,
-    RENT,
-    FOOD,
-    TRANSPORT
 }

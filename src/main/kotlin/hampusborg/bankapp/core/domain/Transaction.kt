@@ -4,7 +4,7 @@ import hampusborg.bankapp.core.domain.enums.TransactionCategory
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 
-@Document(collection = "transactions")
+@Document(collection = "transaction")
 data class Transaction(
     @Id val id: String? = null,
     val fromAccountId: String,

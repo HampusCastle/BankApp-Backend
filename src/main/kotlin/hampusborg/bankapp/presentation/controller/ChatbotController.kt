@@ -1,5 +1,6 @@
 package hampusborg.bankapp.presentation.controller
 
+import hampusborg.bankapp.application.dto.response.ChatbotResponse
 import hampusborg.bankapp.application.service.ChatbotService
 import hampusborg.bankapp.infrastructure.util.JwtUtil
 import org.springframework.http.ResponseEntity
@@ -11,27 +12,26 @@ class ChatbotController(
     private val chatbotService: ChatbotService,
     private val jwtUtil: JwtUtil
 ) {
+
     @PostMapping("/query")
     fun handleChatbotQuery(
-        @RequestBody query: String,
+        @RequestBody query: Map<String, String>,
         @RequestHeader("Authorization") token: String
-    ): ResponseEntity<String> {
-        if (query.isBlank()) {
-            return ResponseEntity.badRequest().body("Query cannot be empty")
+    ): ResponseEntity<ChatbotResponse> {
+        val queryText = query["query"] ?: return createErrorResponse("Query cannot be empty")
+
+        if (!token.startsWith("Bearer ")) {
+            return createErrorResponse("Authorization header must start with 'Bearer '.")
         }
 
-        val userDetails = jwtUtil.extractUserDetails(token.substringAfter(" "))
-        val userId = userDetails?.first
+        val userId = jwtUtil.extractUserDetails(token.substringAfter("Bearer "))?.first
+            ?: return createErrorResponse("Invalid or missing token.")
 
-        return if (userId != null) {
-            val response = chatbotService.getChatbotResponse(query, userId)
-            if (response.isBlank()) {
-                ResponseEntity.ok("No information available")
-            } else {
-                ResponseEntity.ok(response)
-            }
-        } else {
-            ResponseEntity.badRequest().body("Invalid token or user.")
-        }
+        val response = chatbotService.getChatbotResponse(queryText, userId)
+        return ResponseEntity.ok(response)
+    }
+
+    private fun createErrorResponse(message: String): ResponseEntity<ChatbotResponse> {
+        return ResponseEntity.badRequest().body(ChatbotResponse("Error", message))
     }
 }

@@ -102,12 +102,20 @@ class RecurringPaymentService(
         }
     }
 
-    fun getRecurringPaymentsByUserId(userId: String): List<RecurringPaymentResponse> {
-        return try {
-            recurringPaymentRepository.findByUserId(userId).map { mapToResponse(it) }
-        } catch (e: Exception) {
-            logger.error("Error fetching recurring payments for userId: $userId, ${e.message}", e)
-            throw ApiRequestException("Failed to fetch recurring payments for user: $userId")
+    fun getAllRecurringPayments(userId: String): List<RecurringPaymentResponse> {
+        val payments = recurringPaymentRepository.findByUserId(userId)
+        return payments.map { payment ->
+            RecurringPaymentResponse(
+                id = payment.id!!,
+                userId = payment.userId,
+                amount = payment.amount,
+                fromAccountId = payment.fromAccountId,
+                toAccountId = payment.toAccountId,
+                interval = payment.interval,
+                status = payment.status,
+                categoryId = payment.categoryId.name,
+                nextPaymentDate = payment.nextPaymentDate
+            )
         }
     }
 

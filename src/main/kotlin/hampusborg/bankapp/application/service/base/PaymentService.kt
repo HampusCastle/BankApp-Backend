@@ -15,7 +15,8 @@ import java.time.LocalDate
 @Service
 class PaymentService(
     private val accountRepository: AccountRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val cacheHelperService: CacheHelperService
 ) {
 
     @Transactional
@@ -29,13 +30,18 @@ class PaymentService(
         toAccount.balance += request.amount
         accountRepository.saveAll(listOf(fromAccount, toAccount))
 
-        return logTransaction(
+        val transaction = logTransaction(
             fromAccountId = fromAccount.id!!,
             toAccountId = toAccount.id!!,
             userId = userId,
             amount = request.amount,
             category = TransactionCategory.TRANSFER
         )
+
+        cacheHelperService.evictCache("userAccounts", userId)
+        cacheHelperService.storeAccountsByUserId(userId, listOf(fromAccount, toAccount))
+
+        return transaction
     }
 
     fun handleSubscriptionPayment(request: InitiateTransferRequest, userId: String): Transaction {

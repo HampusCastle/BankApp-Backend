@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/market-trends")
-class MarketTrendsController(private val marketTrendsService: MarketTrendsService) {
+class MarketTrendsController(
+    private val marketTrendsService: MarketTrendsService
+) {
 
     @Operation(summary = "Get market trends for a given symbol")
     @ApiResponses(
@@ -28,7 +30,7 @@ class MarketTrendsController(private val marketTrendsService: MarketTrendsServic
             val marketTrends = marketTrendsService.getMarketTrends(getMarketTrendsRequest)
             ResponseEntity.ok(marketTrends)
         } catch (e: Exception) {
-            throw e
+            throw IllegalStateException("Error fetching market trends: ${e.message}", e)
         }
     }
 }

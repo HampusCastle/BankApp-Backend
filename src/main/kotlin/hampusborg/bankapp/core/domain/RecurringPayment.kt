@@ -4,7 +4,7 @@ import hampusborg.bankapp.core.domain.enums.TransactionCategory
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 
-@Document(collection = "recurring_payments")
+@Document(collection = "recurring_payment")
 data class RecurringPayment(
     @Id val id: String? = null,
     val userId: String,

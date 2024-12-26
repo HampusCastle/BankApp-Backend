@@ -67,11 +67,11 @@ class AccountController(
     fun getAllAccounts(
         @RequestHeader("Authorization") token: String
     ): ResponseEntity<List<AccountDetailsResponse>> {
-        return try {
-            val accounts = accountService.getAllAccountsByUser(token)
+        val accounts = accountService.getAllAccountsByUser(token)
+        return if (accounts.isEmpty()) {
+            ResponseEntity.noContent().build()
+        } else {
             ResponseEntity.ok(accounts)
-        } catch (e: Exception) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "No accounts found")
         }
     }
 

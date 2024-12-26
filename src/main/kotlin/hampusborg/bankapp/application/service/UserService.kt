@@ -27,7 +27,7 @@ class UserService(
         user.lastName = updateUserProfileRequest.lastName
         user.email = updateUserProfileRequest.email
         if (updateUserProfileRequest.password.isNotEmpty()) {
-            user.password = updateUserProfileRequest.password // Hash the password before saving
+            user.password = updateUserProfileRequest.password
         }
 
         val updatedUser = userRepository.save(user)

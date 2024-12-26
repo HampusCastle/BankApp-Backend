@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository
 interface TransactionRepository : MongoRepository<Transaction, String> {
     fun findByFromAccountIdAndUserId(fromAccountId: String, userId: String): List<Transaction>
     fun findByToAccountIdAndUserId(toAccountId: String, userId: String): List<Transaction>
+    fun findByUserId(userId: String): List<Transaction>
 }

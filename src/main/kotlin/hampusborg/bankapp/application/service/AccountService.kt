@@ -35,7 +35,7 @@ class AccountService(
         return createAccount(createAccountRequest, userId)
     }
 
-    private fun createAccount(createAccountRequest: CreateAccountRequest, userId: String): AccountDetailsResponse {
+    fun createAccount(createAccountRequest: CreateAccountRequest, userId: String): AccountDetailsResponse {
         val account = Account(
             userId = userId,
             name = createAccountRequest.name,
@@ -51,7 +51,8 @@ class AccountService(
             "Account Type: ${createAccountRequest.accountType}, Balance: ${createAccountRequest.balance}"
         )
 
-        cacheHelperService.storeAccountsByUserId(userId, listOf(savedAccount))
+        cacheHelperService.evictAndStoreAllAccountsForUser(userId)
+
         return mapToAccountDetailsResponse(savedAccount)
     }
 
@@ -100,14 +101,19 @@ class AccountService(
         val userId = jwtUtil.extractUserDetails(token.substringAfter(" "))?.first
             ?: throw IllegalArgumentException("Invalid token")
 
+        log.info("Fetching all accounts for user: $userId")
+
         val cachedAccounts = cacheHelperService.getAccountsByUserId(userId)
         if (cachedAccounts.isNotEmpty()) {
+            log.info("Found accounts in cache for user: $userId")
             return cachedAccounts
         }
 
         val accounts = accountRepository.findByUserId(userId)
+        log.info("Fetched ${accounts.size} accounts from the database for user: $userId")
 
         if (accounts.isEmpty()) {
+            log.warn("No accounts found for user: $userId")
             return emptyList()
         }
 
@@ -134,14 +140,15 @@ class AccountService(
         account.balance += amount
         val savedAccount = accountRepository.save(account)
 
-        // Log transaction
         paymentService.logTransaction(
-            fromAccountId = "EXTERNAL_SOURCE",      // Static external source
-            toAccountId = savedAccount.id!!,        // Use non-null id after saving
+            fromAccountId = "DEPOSIT",
+            toAccountId = savedAccount.id!!,
             userId = userId,
             amount = amount,
             category = TransactionCategory.ADDED_FUNDS
         )
+
+        cacheHelperService.evictAndStoreAllAccountsForUser(userId)
 
         return AccountUpdatedResponse(
             id = savedAccount.id,
@@ -170,7 +177,6 @@ class AccountService(
         account.balance -= amount
         accountRepository.save(account)
 
-        // Log transaction
         paymentService.logTransaction(
             fromAccountId = account.id!!,
             toAccountId = "EXTERNAL_DESTINATION",
@@ -178,6 +184,8 @@ class AccountService(
             amount = amount,
             category = TransactionCategory.WITHDRAW_FUNDS
         )
+
+        cacheHelperService.evictAndStoreAllAccountsForUser(userId)
 
         return WithdrawFundsResponse(
             id = account.id,
@@ -209,6 +217,6 @@ class AccountService(
         accountRepository.delete(account)
         activityLogService.logActivity(userId, "Account deleted", "Account ID: $accountId")
 
-        cacheHelperService.evictCache("userAccounts", userId)
+        cacheHelperService.evictAndStoreAllAccountsForUser(userId)
     }
 }

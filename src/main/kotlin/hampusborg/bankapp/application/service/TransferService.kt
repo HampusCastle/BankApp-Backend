@@ -5,6 +5,7 @@ import hampusborg.bankapp.application.dto.request.SendNotificationRequest
 import hampusborg.bankapp.application.dto.response.TransferStatusResponse
 import hampusborg.bankapp.application.exception.classes.InsufficientFundsException
 import hampusborg.bankapp.application.exception.classes.InvalidAccountException
+import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.core.domain.Transaction
 import hampusborg.bankapp.core.domain.enums.TransactionCategory
 import hampusborg.bankapp.core.repository.AccountRepository
@@ -20,7 +21,8 @@ class TransferService(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
     private val notificationService: NotificationService,
-    private val activityLogService: ActivityLogService
+    private val activityLogService: ActivityLogService,
+    private val cacheHelperService: CacheHelperService
 ) {
 
     @Transactional
@@ -28,7 +30,6 @@ class TransferService(
         val fromAccount = accountRepository.findById(request.fromAccountId).orElseThrow {
             InvalidAccountException("Source account not found.")
         }
-
         val toAccount = accountRepository.findById(request.toAccountId).orElseThrow {
             InvalidAccountException("Destination account not found.")
         }
@@ -43,7 +44,12 @@ class TransferService(
 
         fromAccount.balance -= request.amount
         toAccount.balance += request.amount
-        accountRepository.saveAll(listOf(fromAccount, toAccount))
+
+        accountRepository.save(fromAccount)
+        accountRepository.save(toAccount)
+
+        cacheHelperService.evictCache("userAccounts", userId)
+        cacheHelperService.storeAccountsByUserId(userId, listOf(fromAccount, toAccount))
 
         val transaction = Transaction(
             fromAccountId = request.fromAccountId,

@@ -10,6 +10,7 @@ class ScheduledPaymentProcessor(
     private val paymentService: PaymentService,
     private val activityLogService: ActivityLogService
 ) {
+
     fun processScheduledPayments(currentTime: Long = System.currentTimeMillis()) {
         val payments = scheduledPaymentService.getPaymentsDue(currentTime)
 
@@ -35,7 +36,7 @@ class ScheduledPaymentProcessor(
 
                 payment.nextPaymentDate = calculateNextPaymentDate(payment.schedule, currentTime)
                 scheduledPaymentService.save(payment)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
             }
         }
     }

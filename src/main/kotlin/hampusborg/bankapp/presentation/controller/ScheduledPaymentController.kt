@@ -9,16 +9,15 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/scheduled-payments")
-class ScheduledPaymentController(
-    private val scheduledPaymentService: ScheduledPaymentService
-) {
+class ScheduledPaymentController(private val scheduledPaymentService: ScheduledPaymentService) {
 
     @PostMapping
     fun createScheduledPayment(
         @Valid @RequestBody createScheduledPaymentRequest: CreateScheduledPaymentRequest,
         @RequestHeader("Authorization", required = false) token: String?
     ): ResponseEntity<ScheduledPaymentDetailsResponse> {
-        return ResponseEntity.ok(scheduledPaymentService.createScheduledPayment(createScheduledPaymentRequest, token))
+        val userId = extractUserIdFromToken(token)
+        return ResponseEntity.ok(scheduledPaymentService.createScheduledPayment(createScheduledPaymentRequest, userId))
     }
 
     @PutMapping("/{id}")
@@ -32,5 +31,9 @@ class ScheduledPaymentController(
     @DeleteMapping("/{id}")
     fun deleteScheduledPayment(@PathVariable id: String): ResponseEntity<ScheduledPaymentDetailsResponse> {
         return ResponseEntity.ok(scheduledPaymentService.deleteScheduledPayment(id))
+    }
+
+    private fun extractUserIdFromToken(token: String?): String {
+        return "extractedUserId"
     }
 }

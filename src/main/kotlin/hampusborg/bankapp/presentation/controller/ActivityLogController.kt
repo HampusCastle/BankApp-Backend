@@ -20,7 +20,11 @@ class ActivityLogController(
             ?: return ResponseEntity.badRequest().body(emptyList())
 
         val logs = activityLogService.getLogsByUserId(userId)
-        return ResponseEntity.ok(logs)
+        return if (logs.isNotEmpty()) {
+            ResponseEntity.ok(logs)
+        } else {
+            ResponseEntity.noContent().build()
+        }
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -38,6 +42,10 @@ class ActivityLogController(
     @GetMapping("/all")
     fun getAllActivityLogs(): ResponseEntity<List<UserActivityLog>> {
         val logs = activityLogService.getAllLogs()
-        return ResponseEntity.ok(logs)
+        return if (logs.isNotEmpty()) {
+            ResponseEntity.ok(logs)
+        } else {
+            ResponseEntity.noContent().build()
+        }
     }
 }

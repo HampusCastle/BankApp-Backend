@@ -6,5 +6,7 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface UserActivityLogRepository : MongoRepository<UserActivityLog, String> {
-
+    fun findByUserId(userId: String): List<UserActivityLog>
+    fun findByAction(action: String): List<UserActivityLog>
+    fun findByTimestampBetween(start: Long, end: Long): List<UserActivityLog>
 }
