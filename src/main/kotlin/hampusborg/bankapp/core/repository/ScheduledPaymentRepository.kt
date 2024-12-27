@@ -7,5 +7,4 @@ import org.springframework.stereotype.Repository
 @Repository
 interface ScheduledPaymentRepository : MongoRepository<ScheduledPayment, String> {
     fun findByUserId(userId: String): List<ScheduledPayment>
-    fun findByNextPaymentDateBefore(currentTime: Long): List<ScheduledPayment>
 }

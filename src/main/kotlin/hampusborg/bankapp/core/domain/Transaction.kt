@@ -3,6 +3,7 @@ package hampusborg.bankapp.core.domain
 import hampusborg.bankapp.core.domain.enums.TransactionCategory
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
+import java.time.LocalDateTime
 
 @Document(collection = "transaction")
 data class Transaction(
@@ -13,5 +14,5 @@ data class Transaction(
     val amount: Double,
     val timestamp: Long,
     val categoryId: TransactionCategory,
-    val date: String
+    val date: LocalDateTime
 )

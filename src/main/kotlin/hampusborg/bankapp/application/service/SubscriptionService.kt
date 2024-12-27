@@ -54,7 +54,7 @@ class SubscriptionService(
             serviceName = this.serviceName,
             interval = this.interval,
             status = this.status,
-            categoryId = this.categoryId ?: "",
+            categoryId = this.categoryId,
             nextPaymentDate = this.nextPaymentDate
         )
     }

@@ -34,11 +34,11 @@ class TransactionService(
 
     fun getFilteredTransactions(
         userId: String,
-        fromDate: LocalDate? = null,
-        toDate: LocalDate? = null,
-        category: TransactionCategory? = null,
-        minAmount: Double? = null,
-        maxAmount: Double? = null,
+        fromDate: LocalDate?,
+        toDate: LocalDate?,
+        category: TransactionCategory?,
+        minAmount: Double?,
+        maxAmount: Double?,
         accountId: String
     ): List<Transaction> {
         logger.info("Filtering transactions for userId: $userId, accountId: $accountId")
@@ -48,7 +48,8 @@ class TransactionService(
         logger.debug("Filtering transactions based on provided criteria.")
 
         return transactions.filter { transaction ->
-            val transactionDate = LocalDate.parse(transaction.date)
+            val transactionDate = transaction.date.toLocalDate()
+
             val isWithinDate = (fromDate == null || !transactionDate.isBefore(fromDate)) &&
                     (toDate == null || !transactionDate.isAfter(toDate))
 

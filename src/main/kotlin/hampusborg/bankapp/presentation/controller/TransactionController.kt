@@ -63,7 +63,7 @@ class TransactionController(
 
         } catch (e: Exception) {
             logger.error("Error fetching transaction history: ${e.message}", e)
-            return ResponseEntity.status(500).body(emptyList<TransactionDetailsResponse>())
+            return ResponseEntity.status(500).body(emptyList())
         }
     }
 }

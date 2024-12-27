@@ -22,14 +22,6 @@ class ActivityLogService(
         return userActivityLogRepository.findByUserId(userId)
     }
 
-    fun getLogsByAction(action: String): List<UserActivityLog> {
-        return userActivityLogRepository.findByAction(action)
-    }
-
-    fun getLogsByTimestampRange(start: Long, end: Long): List<UserActivityLog> {
-        return userActivityLogRepository.findByTimestampBetween(start, end)
-    }
-
     fun getAllLogs(): List<UserActivityLog> {
         return userActivityLogRepository.findAll()
     }

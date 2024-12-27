@@ -105,7 +105,7 @@ class AccountService(
 
         val cachedAccounts = cacheHelperService.getAccountsByUserId(userId)
         if (cachedAccounts.isNotEmpty()) {
-            log.info("Found accounts in cache for user: $userId")
+            log.info("Returning cached accounts for user: $userId")
             return cachedAccounts
         }
 

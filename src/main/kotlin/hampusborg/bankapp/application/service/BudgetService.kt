@@ -4,25 +4,34 @@ import hampusborg.bankapp.application.dto.response.ExpensesSummaryResponse
 import hampusborg.bankapp.application.exception.classes.NoTransactionsFoundException
 import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.core.domain.Transaction
+import hampusborg.bankapp.core.repository.AccountRepository
 import hampusborg.bankapp.core.repository.TransactionRepository
 import org.springframework.stereotype.Service
 
 @Service
 class BudgetService(
     private val transactionRepository: TransactionRepository,
-    private val cacheHelperService: CacheHelperService
+    private val cacheHelperService: CacheHelperService,
+    private val accountRepository: AccountRepository
 ) {
 
-    fun getMonthlyExpenses(userId: String, accountId: String): ExpensesSummaryResponse {
+    fun getMonthlyExpensesForAllAccounts(userId: String): ExpensesSummaryResponse {
         val cachedExpenses = cacheHelperService.getMonthlyExpenses(userId)
         if (cachedExpenses != null) {
             return cachedExpenses
         }
 
-        val transactions = loadTransactionsByAccountIdAndUserId(userId, accountId)
+        val accounts = accountRepository.findByUserId(userId)
+        val transactions = mutableListOf<Transaction>()
+
+        for (account in accounts) {
+            account.id?.let {
+                transactions.addAll(loadTransactionsByAccountIdAndUserId(userId, it))
+            }
+        }
 
         if (transactions.isEmpty()) {
-            throw NoTransactionsFoundException("No transactions found for user ID: $userId and account ID: $accountId")
+            throw NoTransactionsFoundException("No transactions found for user ID: $userId across all accounts")
         }
 
         val expensesSummary = calculateExpensesSummary(transactions)

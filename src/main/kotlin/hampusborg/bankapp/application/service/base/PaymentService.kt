@@ -10,7 +10,7 @@ import hampusborg.bankapp.application.exception.classes.InsufficientFundsExcepti
 import hampusborg.bankapp.application.exception.classes.InvalidAccountException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Service
 class PaymentService(
@@ -39,19 +39,9 @@ class PaymentService(
         )
 
         cacheHelperService.evictCache("userAccounts", userId)
-        cacheHelperService.storeAccountsByUserId(userId, listOf(fromAccount, toAccount))
-
+        val updatedAccounts = accountRepository.findByUserId(userId)
+        cacheHelperService.storeAccountsByUserId(userId, updatedAccounts)
         return transaction
-    }
-
-    fun handleSubscriptionPayment(request: InitiateTransferRequest, userId: String): Transaction {
-        return logTransaction(
-            fromAccountId = request.fromAccountId,
-            toAccountId = request.toAccountId,
-            userId = userId,
-            amount = request.amount,
-            category = TransactionCategory.SUBSCRIPTIONS
-        )
     }
 
     private fun getAccount(accountId: String, userId: String): Account {
@@ -82,7 +72,7 @@ class PaymentService(
             toAccountId = toAccountId,
             userId = userId,
             amount = amount,
-            date = LocalDate.now().toString(),
+            date = LocalDateTime.now(),
             timestamp = System.currentTimeMillis(),
             categoryId = category
         )

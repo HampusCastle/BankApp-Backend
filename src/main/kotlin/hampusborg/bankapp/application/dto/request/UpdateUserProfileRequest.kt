@@ -3,7 +3,6 @@ package hampusborg.bankapp.application.dto.request
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 
-
 data class UpdateUserProfileRequest(
     @field:NotBlank(message = "First name is required")
     val firstName: String,

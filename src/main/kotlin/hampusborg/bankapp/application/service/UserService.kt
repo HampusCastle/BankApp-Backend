@@ -8,12 +8,14 @@ import hampusborg.bankapp.core.domain.User
 import hampusborg.bankapp.core.repository.UserRepository
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
 @Service
 class UserService(
     private val userRepository: UserRepository,
-    private val cacheHelperService: CacheHelperService
+    private val cacheHelperService: CacheHelperService,
+    private val passwordEncoder: PasswordEncoder
 ) {
 
     fun updateUserProfile(updateUserProfileRequest: UpdateUserProfileRequest): ResponseEntity<UpdatedUserProfileResponse> {
@@ -26,12 +28,14 @@ class UserService(
         user.firstName = updateUserProfileRequest.firstName
         user.lastName = updateUserProfileRequest.lastName
         user.email = updateUserProfileRequest.email
+
         if (updateUserProfileRequest.password.isNotEmpty()) {
-            user.password = updateUserProfileRequest.password
+            user.password = passwordEncoder.encode(updateUserProfileRequest.password)
         }
 
         val updatedUser = userRepository.save(user)
 
+        // Evict old cache and store the updated user in cache
         cacheHelperService.evictCache("userCache", userId)
         cacheHelperService.storeUser(updatedUser)
 
@@ -47,6 +51,7 @@ class UserService(
         return ResponseEntity.ok(response)
     }
 
+
     fun getUserProfile(userId: String): ResponseEntity<User> {
 
         val cachedUser = cacheHelperService.getUserFromCache(userId)
@@ -61,10 +66,5 @@ class UserService(
         cacheHelperService.storeUser(user)
 
         return ResponseEntity.ok(user)
-    }
-    fun getUserById(userId: String): User {
-        return userRepository.findById(userId).orElseThrow {
-            UserNotFoundException("User not found with id: $userId")
-        }
     }
 }

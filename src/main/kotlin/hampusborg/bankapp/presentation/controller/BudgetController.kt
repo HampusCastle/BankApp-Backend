@@ -16,13 +16,12 @@ class BudgetController(
     private val budgetService: BudgetService
 ) {
 
-    @GetMapping("/expenses/{userId}/{accountId}")
-    fun getMonthlyExpenses(
-        @PathVariable @NotEmpty userId: String,
-        @PathVariable @NotEmpty accountId: String
+    @GetMapping("/expenses/{userId}")
+    fun getMonthlyExpensesForAllAccounts(
+        @PathVariable @NotEmpty userId: String
     ): ResponseEntity<ExpensesSummaryResponse> {
         return try {
-            val totalExpenses = budgetService.getMonthlyExpenses(userId, accountId)
+            val totalExpenses = budgetService.getMonthlyExpensesForAllAccounts(userId)
             ResponseEntity.ok(totalExpenses)
         } catch (e: NoTransactionsFoundException) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
