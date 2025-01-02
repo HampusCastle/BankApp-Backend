@@ -12,8 +12,8 @@ data class Account(
 
     @field:Indexed val userId: String,
 
-    val name: String,
-    val accountType: AccountType,
+    var name: String,
+    var accountType: AccountType,
     var balance: Double,
     val interestRate: Double? = null,
     val createdAt: LocalDateTime = LocalDateTime.now(),

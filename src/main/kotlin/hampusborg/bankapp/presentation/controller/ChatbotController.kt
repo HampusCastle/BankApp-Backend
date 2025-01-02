@@ -1,3 +1,4 @@
+/*
 package hampusborg.bankapp.presentation.controller
 
 import hampusborg.bankapp.application.dto.response.ChatbotResponse
@@ -12,6 +13,7 @@ class ChatbotController(
     private val chatbotService: ChatbotService,
     private val jwtUtil: JwtUtil
 ) {
+TODO - Funkar soms agt i postman, men inte hunnit frontend
 
     @PostMapping("/query")
     fun handleChatbotQuery(
@@ -35,3 +37,4 @@ class ChatbotController(
         return ResponseEntity.badRequest().body(ChatbotResponse("Error", message))
     }
 }
+*/

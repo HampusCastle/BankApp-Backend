@@ -4,6 +4,7 @@ import hampusborg.bankapp.application.dto.request.InitiateTransferRequest
 import hampusborg.bankapp.application.dto.request.RecurringPaymentRequest
 import hampusborg.bankapp.application.dto.response.RecurringPaymentResponse
 import hampusborg.bankapp.application.exception.classes.ApiRequestException
+import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.application.service.base.PaymentService
 import hampusborg.bankapp.core.domain.RecurringPayment
 import hampusborg.bankapp.core.domain.enums.TransactionCategory
@@ -17,142 +18,115 @@ import java.util.*
 @Service
 class RecurringPaymentService(
     private val recurringPaymentRepository: RecurringPaymentRepository,
-    private val paymentService: PaymentService
+    private val paymentService: PaymentService,
+    private val cacheHelperService: CacheHelperService
 ) {
 
-    private val logger = LoggerFactory.getLogger(RecurringPaymentService::class.java)
+    private val log = LoggerFactory.getLogger(RecurringPaymentService::class.java)
 
     fun createRecurringPayment(request: RecurringPaymentRequest): RecurringPaymentResponse {
-        try {
-            val userId = SecurityContextHolder.getContext().authentication?.name
-                ?: throw ApiRequestException("User is not authenticated")
+        val userId = SecurityContextHolder.getContext().authentication?.name
+            ?: throw ApiRequestException("User is not authenticated")
 
-            logger.info("Creating recurring payment for user: $userId with request: $request")
+        log.info("Creating recurring payment for user: $userId")
 
-            val recurringPayment = RecurringPayment(
-                userId = userId,
-                amount = request.amount,
-                fromAccountId = request.fromAccountId,
-                toAccountId = request.toAccountId,
-                interval = request.interval,
-                categoryId = TransactionCategory.RECURRING_PAYMENT,
-                status = "active",
-                nextPaymentDate = calculateNextPaymentDate(request.interval)
-            )
+        val recurringPayment = RecurringPayment(
+            userId = userId,
+            amount = request.amount,
+            fromAccountId = request.fromAccountId,
+            toAccountId = request.toAccountId,
+            interval = request.interval,
+            categoryId = TransactionCategory.RECURRING_PAYMENT,
+            status = "active",
+            nextPaymentDate = calculateNextPaymentDate(request.interval)
+        )
 
-            val savedPayment = recurringPaymentRepository.save(recurringPayment)
-            logger.info("Recurring payment created successfully with ID: ${savedPayment.id}")
+        val savedPayment = recurringPaymentRepository.save(recurringPayment)
+        log.info("Saved recurring payment: $savedPayment")
 
-            return RecurringPaymentResponse(
-                id = savedPayment.id!!,
-                userId = savedPayment.userId,
-                amount = savedPayment.amount,
-                fromAccountId = savedPayment.fromAccountId,
-                toAccountId = savedPayment.toAccountId,
-                interval = savedPayment.interval,
-                status = savedPayment.status,
-                categoryId = savedPayment.categoryId.name,
-                nextPaymentDate = savedPayment.nextPaymentDate
-            )
-        } catch (e: Exception) {
-            logger.error("Unexpected error creating recurring payment: ${e.message}", e)
-            throw ApiRequestException("An unexpected error occurred while creating the recurring payment: ${e.message}")
-        }
+        return mapToResponse(savedPayment)
     }
 
-
-
     fun updateRecurringPayment(paymentId: String, request: RecurringPaymentRequest): RecurringPaymentResponse {
-        try {
-            val recurringPayment = recurringPaymentRepository.findById(paymentId).orElseThrow {
-                logger.error("Recurring payment with ID $paymentId not found")
-                IllegalArgumentException("Recurring payment not found")
-            }
-            logger.info("Updating recurring payment ID: $paymentId with new values - amount: ${request.amount}, interval: ${request.interval}, toAccountId: ${request.toAccountId}")
-
-            recurringPayment.apply {
-                amount = request.amount
-                interval = request.interval
-                toAccountId = request.toAccountId
-            }
-
-            return mapToResponse(recurringPaymentRepository.save(recurringPayment))
-
-        } catch (e: Exception) {
-            logger.error("Error updating recurring payment: ${e.message}", e)
-            throw ApiRequestException("Failed to update recurring payment: ${e.message}")
+        val recurringPayment = recurringPaymentRepository.findById(paymentId).orElseThrow {
+            ApiRequestException("Recurring payment not found")
         }
+
+        recurringPayment.apply {
+            amount = request.amount
+            interval = request.interval
+            toAccountId = request.toAccountId
+        }
+
+        val updatedPayment = recurringPaymentRepository.save(recurringPayment)
+        cacheHelperService.storeRecurringPayment(updatedPayment.id!!, updatedPayment)
+        cacheHelperService.evictMonthlyExpensesCache(updatedPayment.userId)
+
+        return mapToResponse(updatedPayment)
     }
 
     fun cancelRecurringPayment(paymentId: String) {
-        try {
-            val recurringPayment = recurringPaymentRepository.findById(paymentId).orElseThrow {
-                logger.error("Recurring payment with ID $paymentId not found for cancellation")
-                IllegalArgumentException("Recurring payment not found")
-            }
-
-            logger.info("Canceling recurring payment with ID: $paymentId")
-
-            recurringPayment.status = "canceled"
-            recurringPaymentRepository.save(recurringPayment)
-
-        } catch (e: Exception) {
-            logger.error("Error canceling recurring payment: ${e.message}", e)
-            throw ApiRequestException("Failed to cancel recurring payment: ${e.message}")
+        val recurringPayment = recurringPaymentRepository.findById(paymentId).orElseThrow {
+            ApiRequestException("Recurring payment not found")
         }
+
+        recurringPayment.status = "canceled"
+        recurringPaymentRepository.save(recurringPayment)
+        cacheHelperService.evictCache("recurringPayments", recurringPayment.userId)
+        cacheHelperService.evictMonthlyExpensesCache(recurringPayment.userId)
     }
 
     fun getAllRecurringPayments(userId: String): List<RecurringPaymentResponse> {
-        val payments = recurringPaymentRepository.findByUserId(userId)
-        return payments.map { payment ->
-            RecurringPaymentResponse(
-                id = payment.id!!,
-                userId = payment.userId,
-                amount = payment.amount,
-                fromAccountId = payment.fromAccountId,
-                toAccountId = payment.toAccountId,
-                interval = payment.interval,
-                status = payment.status,
-                categoryId = payment.categoryId.name,
-                nextPaymentDate = payment.nextPaymentDate
-            )
+        log.info("Fetching recurring payments for user {} from cache.", userId)
+        val cachedPayments = cacheHelperService.getCache("recurringPayments", userId, List::class.java)
+            ?.filterIsInstance<RecurringPayment>()
+
+        if (!cachedPayments.isNullOrEmpty()) {
+            log.info("Returning cached recurring payments for user {}: {}", userId, cachedPayments)
+            return cachedPayments.map { mapToResponse(it) }
         }
+
+        log.warn("Cache miss for recurring payments. Fetching from database.")
+        val payments = recurringPaymentRepository.findByUserId(userId)
+        if (payments.isNotEmpty()) {
+            log.info("Storing payments in cache for user {}: {}", userId, payments)
+            cacheHelperService.storeRecurringPaymentsForUser(userId, payments)
+        }
+        return payments.map { mapToResponse(it) }
     }
 
     @Scheduled(cron = "0 0 0 * * *")
     fun processDueRecurringPayments() {
-        try {
-            val now = System.currentTimeMillis()
-            recurringPaymentRepository.findByNextPaymentDateBeforeAndStatus(now, "active")
-                .forEach { processPayment(it) }
-        } catch (e: Exception) {
-            logger.error("Error processing due recurring payments: ${e.message}", e)
-            throw ApiRequestException("Failed to process due recurring payments")
+        val now = System.currentTimeMillis()
+        val duePayments = recurringPaymentRepository.findByNextPaymentDateBeforeAndStatus(now, "active")
+
+        val affectedUsers = mutableSetOf<String>()
+        duePayments.forEach { payment ->
+            processPayment(payment)
+            affectedUsers.add(payment.userId)
+        }
+
+        affectedUsers.forEach { userId ->
+            cacheHelperService.evictMonthlyExpensesCache(userId)
         }
     }
 
     private fun processPayment(recurringPayment: RecurringPayment) {
-        try {
-            val transferRequest = createTransferRequest(recurringPayment)
+        val transferRequest = createTransferRequest(recurringPayment)
 
-            logger.info("Processing payment for recurring payment ID: ${recurringPayment.id}")
+        paymentService.handleTransfer(transferRequest, recurringPayment.userId)
+        paymentService.logTransaction(
+            fromAccountId = recurringPayment.fromAccountId,
+            toAccountId = recurringPayment.toAccountId,
+            userId = recurringPayment.userId,
+            amount = recurringPayment.amount,
+            category = TransactionCategory.RECURRING_PAYMENT
+        )
 
-            paymentService.handleTransfer(transferRequest, recurringPayment.userId)
-            paymentService.logTransaction(
-                fromAccountId = recurringPayment.fromAccountId,
-                toAccountId = recurringPayment.toAccountId,
-                userId = recurringPayment.userId,
-                amount = recurringPayment.amount,
-                category = TransactionCategory.RECURRING_PAYMENT
-            )
+        cacheHelperService.handleAccountCacheUpdate(recurringPayment.userId)
 
-            recurringPayment.nextPaymentDate = calculateNextPaymentDate(recurringPayment.interval)
-            recurringPaymentRepository.save(recurringPayment)
-
-        } catch (e: Exception) {
-            logger.error("Error processing recurring payment ID: ${recurringPayment.id}, ${e.message}", e)
-            throw ApiRequestException("Failed to process recurring payment ID: ${recurringPayment.id}")
-        }
+        recurringPayment.nextPaymentDate = calculateNextPaymentDate(recurringPayment.interval)
+        recurringPaymentRepository.save(recurringPayment)
     }
 
     private fun createTransferRequest(recurringPayment: RecurringPayment) = InitiateTransferRequest(

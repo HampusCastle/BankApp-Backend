@@ -2,6 +2,7 @@ package hampusborg.bankapp.core.domain
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
+import java.time.LocalDateTime
 
 @Document(collection = "scheduled_payment")
 data class ScheduledPayment(
@@ -13,4 +14,5 @@ data class ScheduledPayment(
     var schedule: String,
     var nextPaymentDate: Long,
     val categoryId: String? = null,
+    val date: LocalDateTime? = null,
 )

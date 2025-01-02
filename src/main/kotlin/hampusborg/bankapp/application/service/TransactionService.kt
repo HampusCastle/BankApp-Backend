@@ -1,5 +1,6 @@
 package hampusborg.bankapp.application.service
 
+import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.core.domain.Transaction
 import hampusborg.bankapp.core.repository.TransactionRepository
 import hampusborg.bankapp.core.domain.enums.TransactionCategory
@@ -9,27 +10,46 @@ import java.time.LocalDate
 
 @Service
 class TransactionService(
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val cacheHelperService: CacheHelperService
 ) {
     private val logger = LoggerFactory.getLogger(TransactionService::class.java)
 
     fun getTransactionsByUser(userId: String): List<Transaction> {
         logger.info("Fetching transactions for userId: $userId")
+
+        val cachedTransactions = cacheHelperService.getTransactionsByUserId(userId)
+        if (!cachedTransactions.isNullOrEmpty()) {
+            logger.debug("Returning cached transactions for userId: $userId")
+            return cachedTransactions
+        }
+
         val transactions = transactionRepository.findByUserId(userId)
         logger.debug("Found ${transactions.size} transactions for userId: $userId")
+
+        cacheHelperService.storeTransactionsByUserId(userId, transactions)
+
         return transactions
     }
 
     fun getTransactionsByAccountId(userId: String, accountId: String): List<Transaction> {
         logger.info("Fetching transactions for accountId: $accountId and userId: $userId")
 
+        val cachedTransactions = cacheHelperService.getTransactionsByAccountId(accountId)
+        if (!cachedTransactions.isNullOrEmpty()) {
+            logger.debug("Returning cached transactions for accountId: $accountId")
+            return cachedTransactions
+        }
+
         val transactionsFromAccount = transactionRepository.findByFromAccountIdAndUserId(accountId, userId)
         val transactionsToAccount = transactionRepository.findByToAccountIdAndUserId(accountId, userId)
 
-        logger.debug("Found ${transactionsFromAccount.size} transactions from account.")
-        logger.debug("Found ${transactionsToAccount.size} transactions to account.")
+        val allTransactions = transactionsFromAccount + transactionsToAccount
 
-        return transactionsFromAccount + transactionsToAccount
+        cacheHelperService.storeTransactionsByAccountId(accountId, allTransactions)
+        cacheHelperService.evictTransactionsCache(userId)
+
+        return allTransactions
     }
 
     fun getFilteredTransactions(
@@ -44,8 +64,6 @@ class TransactionService(
         logger.info("Filtering transactions for userId: $userId, accountId: $accountId")
 
         val transactions = getTransactionsByAccountId(userId, accountId)
-
-        logger.debug("Filtering transactions based on provided criteria.")
 
         return transactions.filter { transaction ->
             val transactionDate = transaction.date.toLocalDate()

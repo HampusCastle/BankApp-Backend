@@ -8,6 +8,8 @@ import hampusborg.bankapp.core.repository.AccountRepository
 import hampusborg.bankapp.core.repository.TransactionRepository
 import hampusborg.bankapp.application.exception.classes.InsufficientFundsException
 import hampusborg.bankapp.application.exception.classes.InvalidAccountException
+import hampusborg.bankapp.core.domain.enums.AccountType
+import hampusborg.bankapp.core.repository.SavingsGoalRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -16,7 +18,8 @@ import java.time.LocalDateTime
 class PaymentService(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
-    private val cacheHelperService: CacheHelperService
+    private val cacheHelperService: CacheHelperService,
+    private val savingsGoalRepository: SavingsGoalRepository
 ) {
 
     @Transactional
@@ -24,7 +27,16 @@ class PaymentService(
         val fromAccount = getAccount(request.fromAccountId, userId)
         val toAccount = getAccount(request.toAccountId, userId)
 
-        validateAccounts(fromAccount, toAccount, request.amount)
+        validateAccounts(fromAccount, request.amount)
+
+        if (toAccount.accountType == AccountType.SAVINGS) {
+            val savingsGoals = savingsGoalRepository.findByUserId(toAccount.userId)
+            val savingsGoal = savingsGoals.firstOrNull { it.name == toAccount.name }
+                ?: throw InvalidAccountException("No matching savings goal found for the user.")
+
+            savingsGoal.currentAmount += request.amount
+            savingsGoalRepository.save(savingsGoal)
+        }
 
         fromAccount.balance -= request.amount
         toAccount.balance += request.amount
@@ -38,9 +50,7 @@ class PaymentService(
             category = TransactionCategory.TRANSFER
         )
 
-        cacheHelperService.evictCache("userAccounts", userId)
-        val updatedAccounts = accountRepository.findByUserId(userId)
-        cacheHelperService.storeAccountsByUserId(userId, updatedAccounts)
+        cacheHelperService.evictAndStoreAllAccountsForUser(userId)
         return transaction
     }
 
@@ -54,7 +64,7 @@ class PaymentService(
         return account
     }
 
-    private fun validateAccounts(fromAccount: Account, toAccount: Account, amount: Double) {
+    private fun validateAccounts(fromAccount: Account, amount: Double) {
         if (fromAccount.balance < amount) {
             throw InsufficientFundsException("Insufficient balance in account ${fromAccount.id}.")
         }

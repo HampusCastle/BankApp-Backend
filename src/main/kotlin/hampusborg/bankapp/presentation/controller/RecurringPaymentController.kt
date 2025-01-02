@@ -21,7 +21,7 @@ class RecurringPaymentController(
         return recurringPaymentService.createRecurringPayment(request)
     }
 
-    @GetMapping("/recurring-payments")
+    @GetMapping
     fun getRecurringPayments(
         @RequestHeader("Authorization") token: String
     ): ResponseEntity<List<RecurringPaymentResponse>> {

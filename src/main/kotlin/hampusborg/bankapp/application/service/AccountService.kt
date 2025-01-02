@@ -51,9 +51,29 @@ class AccountService(
             "Account Type: ${createAccountRequest.accountType}, Balance: ${createAccountRequest.balance}"
         )
 
-        cacheHelperService.evictAndStoreAllAccountsForUser(userId)
+        cacheHelperService.handleAccountCacheUpdate(userId)
 
         return mapToAccountDetailsResponse(savedAccount)
+    }
+
+    fun updateAccount(accountId: String, updatedFields: Map<String, Any>, userId: String): AccountDetailsResponse {
+        val account = accountRepository.findById(accountId).orElseThrow {
+            AccountNotFoundException("Account not found for ID: $accountId")
+        }
+
+        if (account.userId != userId) {
+            throw IllegalStateException("User does not have permission to update this account.")
+        }
+
+        updatedFields["name"]?.let { account.name = it as String }
+        updatedFields["balance"]?.let { account.balance = (it as Number).toDouble() }
+        updatedFields["accountType"]?.let { account.accountType = AccountType.valueOf(it as String) }
+
+        val updatedAccount = accountRepository.save(account)
+
+        cacheHelperService.handleAccountCacheUpdate(userId)
+
+        return mapToAccountDetailsResponse(updatedAccount)
     }
 
     fun getAccountById(accountId: String, token: String): AccountDetailsResponse {
@@ -195,28 +215,22 @@ class AccountService(
         )
     }
 
-    fun deleteAccount(accountId: String, token: String) {
-        val userId = jwtUtil.extractUserDetails(token.substringAfter(" "))?.first
-            ?: throw IllegalArgumentException("Invalid token")
-
+    fun deleteAccount(accountId: String, userId: String) {
         val account = accountRepository.findById(accountId).orElseThrow {
             AccountNotFoundException("Account not found for ID: $accountId")
         }
 
         if (account.userId != userId) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Account does not belong to the user.")
+            throw IllegalStateException("User does not have permission to delete this account.")
         }
 
         if (account.balance != 0.0) {
-            throw ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "You cannot delete an account with a positive or negative balance."
-            )
+            throw IllegalStateException("Cannot delete an account with a non-zero balance.")
         }
 
         accountRepository.delete(account)
         activityLogService.logActivity(userId, "Account deleted", "Account ID: $accountId")
 
-        cacheHelperService.evictAndStoreAllAccountsForUser(userId)
+        cacheHelperService.handleAccountCacheUpdate(userId)
     }
 }

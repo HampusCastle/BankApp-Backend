@@ -2,12 +2,16 @@ package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.application.dto.request.CreateScheduledPaymentRequest
 import hampusborg.bankapp.application.dto.response.ScheduledPaymentDetailsResponse
+import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.core.domain.ScheduledPayment
 import hampusborg.bankapp.core.repository.ScheduledPaymentRepository
 import org.springframework.stereotype.Service
 
 @Service
-class ScheduledPaymentService(private val scheduledPaymentRepository: ScheduledPaymentRepository) {
+class ScheduledPaymentService(
+    private val scheduledPaymentRepository: ScheduledPaymentRepository,
+    private val cacheHelperService: CacheHelperService
+) {
 
     fun createScheduledPayment(
         request: CreateScheduledPaymentRequest,
@@ -25,14 +29,14 @@ class ScheduledPaymentService(private val scheduledPaymentRepository: ScheduledP
             schedule = request.schedule,
             nextPaymentDate = request.nextPaymentDate
         )
-
+        println("Saving ScheduledPayment: $scheduledPayment")
         val savedPayment = scheduledPaymentRepository.save(scheduledPayment)
 
-        return ScheduledPaymentDetailsResponse(
-            message = "Scheduled payment created successfully for user: $userId",
-            paymentId = savedPayment.id,
-            amount = savedPayment.amount
-        )
+        cacheHelperService.evictCache("scheduledPayments", userId)
+        cacheHelperService.storeScheduledPayment(savedPayment.id!!, savedPayment)
+        cacheHelperService.storeScheduledPaymentsForUser(userId, listOf(savedPayment))
+
+        return mapToResponse(savedPayment, "Scheduled payment created successfully for user: $userId")
     }
 
     fun updateScheduledPayment(id: String, request: CreateScheduledPaymentRequest): ScheduledPaymentDetailsResponse {
@@ -46,31 +50,58 @@ class ScheduledPaymentService(private val scheduledPaymentRepository: ScheduledP
 
         val updatedPayment = scheduledPaymentRepository.save(existingPayment)
 
-        return ScheduledPaymentDetailsResponse(
-            message = "Scheduled payment updated successfully.",
-            paymentId = updatedPayment.id,
-            amount = updatedPayment.amount
-        )
+        cacheHelperService.storeScheduledPayment(updatedPayment.id!!, updatedPayment)
+        cacheHelperService.evictScheduledPaymentsCache(existingPayment.userId)
+
+        val payments = scheduledPaymentRepository.findByUserId(existingPayment.userId)
+        cacheHelperService.storeScheduledPaymentsForUser(existingPayment.userId, payments)
+
+        return mapToResponse(updatedPayment, "Scheduled payment updated successfully.")
     }
 
     fun deleteScheduledPayment(id: String): ScheduledPaymentDetailsResponse {
         val payment = scheduledPaymentRepository.findById(id).orElseThrow {
             RuntimeException("Payment not found")
         }
+
         scheduledPaymentRepository.delete(payment)
-        return ScheduledPaymentDetailsResponse("Scheduled payment deleted successfully", payment.id, payment.amount)
+
+        cacheHelperService.evictScheduledPaymentsCache(payment.userId)
+        cacheHelperService.evictCache("scheduledPaymentDetails", id)
+
+        val payments = scheduledPaymentRepository.findByUserId(payment.userId)
+        cacheHelperService.storeScheduledPaymentsForUser(payment.userId, payments)
+
+        return mapToResponse(payment, "Scheduled payment deleted successfully.")
     }
 
-    fun getPaymentsDue(currentTime: Long): List<ScheduledPayment> {
-        return scheduledPaymentRepository.findAll()
-            .filter { it.nextPaymentDate <= currentTime }
+    fun getScheduledPaymentsByUserId(userId: String): List<ScheduledPaymentDetailsResponse> {
+        val payments = scheduledPaymentRepository.findByUserId(userId)
+        return payments.map {
+            ScheduledPaymentDetailsResponse(
+                message = "Scheduled payment fetched successfully",
+                paymentId = it.id,
+                fromAccountId = it.fromAccountId,
+                toAccountId = it.toAccountId,
+                amount = it.amount,
+                nextPaymentDate = it.nextPaymentDate,
+                schedule = it.schedule
+            )
+        }
     }
 
-    fun save(payment: ScheduledPayment): ScheduledPayment {
-        return scheduledPaymentRepository.save(payment)
-    }
-
-    fun getScheduledPaymentsByUser(userId: String?): List<ScheduledPayment> {
-        return scheduledPaymentRepository.findByUserId(userId!!)
+    private fun mapToResponse(
+        payment: ScheduledPayment,
+        message: String = "Operation successful."
+    ): ScheduledPaymentDetailsResponse {
+        return ScheduledPaymentDetailsResponse(
+            message = message,
+            paymentId = payment.id,
+            fromAccountId = payment.fromAccountId,
+            toAccountId = payment.toAccountId,
+            amount = payment.amount,
+            nextPaymentDate = payment.nextPaymentDate,
+            schedule = payment.schedule
+        )
     }
 }

@@ -24,10 +24,10 @@ class BudgetController(
             val totalExpenses = budgetService.getMonthlyExpensesForAllAccounts(userId)
             ResponseEntity.ok(totalExpenses)
         } catch (e: NoTransactionsFoundException) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ExpensesSummaryResponse(totalExpenses = 0.0, categories = emptyMap()))
         } catch (e: Exception) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ExpensesSummaryResponse(totalExpenses = 0.0, categories = emptyMap()))
         }
     }

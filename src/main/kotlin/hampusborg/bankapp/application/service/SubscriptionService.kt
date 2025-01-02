@@ -3,6 +3,7 @@ package hampusborg.bankapp.application.service
 import hampusborg.bankapp.application.dto.request.SubscriptionRequest
 import hampusborg.bankapp.application.dto.response.SubscriptionResponse
 import hampusborg.bankapp.application.exception.classes.ApiRequestException
+import hampusborg.bankapp.application.service.base.CacheHelperService
 import hampusborg.bankapp.core.domain.Subscription
 import hampusborg.bankapp.core.domain.enums.TransactionCategory
 import hampusborg.bankapp.core.repository.SubscriptionRepository
@@ -11,7 +12,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class SubscriptionService(
-    private val subscriptionRepository: SubscriptionRepository
+    private val subscriptionRepository: SubscriptionRepository,
+    private val cacheHelperService: CacheHelperService
 ) {
 
     fun createSubscription(request: SubscriptionRequest): SubscriptionResponse {
@@ -31,19 +33,38 @@ class SubscriptionService(
         )
 
         val savedSubscription = subscriptionRepository.save(subscription)
+
+        cacheHelperService.evictCache("subscriptions", userId)
+        cacheHelperService.storeSubscription(savedSubscription.id!!, savedSubscription)
+        cacheHelperService.refreshSubscriptionsCache(userId, "active")
+
         return savedSubscription.toResponse()
     }
 
     fun getSubscriptionsByStatus(userId: String, status: String): List<SubscriptionResponse> {
+        val cachedSubscriptions = cacheHelperService.getSubscriptionsByUserAndStatus(userId, status)
+        if (!cachedSubscriptions.isNullOrEmpty()) {
+            return cachedSubscriptions.map { it.toResponse() }
+        }
+
         val subscriptions = subscriptionRepository.findAllByUserIdAndStatus(userId, status)
+
+        cacheHelperService.storeSubscriptionsByUserAndStatus(userId, status, subscriptions)
+
         return subscriptions.map { it.toResponse() }
     }
+
     fun cancelSubscription(id: String) {
         val subscription = subscriptionRepository.findById(id).orElseThrow {
             IllegalArgumentException("Subscription not found")
         }
+
         subscription.status = "canceled"
-        subscriptionRepository.save(subscription)
+
+        val updatedSubscription = subscriptionRepository.save(subscription)
+
+        cacheHelperService.evictSubscriptionsCache(subscription.userId, subscription.status)
+        cacheHelperService.storeSubscription(updatedSubscription.id!!, updatedSubscription)
     }
 
     private fun Subscription.toResponse(): SubscriptionResponse {

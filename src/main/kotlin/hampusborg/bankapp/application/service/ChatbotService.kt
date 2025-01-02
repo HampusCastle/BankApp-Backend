@@ -1,3 +1,4 @@
+/*
 package hampusborg.bankapp.application.service
 
 import hampusborg.bankapp.application.dto.request.GetMarketTrendsRequest
@@ -12,6 +13,8 @@ class ChatbotService(
     private val marketTrendsService: MarketTrendsService,
     private val scheduledPaymentService: ScheduledPaymentService
 ) {
+
+    //TODO - Funkar i postman, men hann inte implementera den i frontend, så borttagen.
 
     private val log = LoggerFactory.getLogger(ChatbotService::class.java)
 
@@ -79,3 +82,4 @@ class ChatbotService(
         return ChatbotResponse("Market Trends for $symbol", response)
     }
 }
+*/

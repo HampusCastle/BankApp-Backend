@@ -3,6 +3,7 @@ package hampusborg.bankapp.core.domain
 import hampusborg.bankapp.core.domain.enums.TransactionCategory
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
+import java.time.LocalDateTime
 
 @Document(collection = "subscription")
 data class Subscription(
@@ -15,5 +16,6 @@ data class Subscription(
     var nextPaymentDate: Long,
     var status: String,
     val fromAccountId: String,
-    val toAccountId: String
+    val toAccountId: String,
+    val date: LocalDateTime? = null,
 )

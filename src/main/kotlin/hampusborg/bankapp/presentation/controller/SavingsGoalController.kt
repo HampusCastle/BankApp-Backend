@@ -15,33 +15,29 @@ class SavingsGoalController(
 ) {
 
     @PostMapping
-    fun createSavingsGoal(@Valid @RequestBody request: CreateSavingsGoalRequest, authentication: Authentication): ResponseEntity<SavingsGoalDetailsResponse> {
+    fun createSavingsGoal(
+        @Valid @RequestBody request: CreateSavingsGoalRequest,
+        authentication: Authentication
+    ): ResponseEntity<SavingsGoalDetailsResponse> {
         val userId = authentication.principal as String
-
         val createdGoal = savingsGoalService.createSavingsGoal(request, userId)
         return ResponseEntity.ok(createdGoal)
     }
 
-    @GetMapping("/user/{userId}/savings-goals")
-    fun getSavingsGoalsByUser(@PathVariable userId: String): ResponseEntity<List<SavingsGoalDetailsResponse>> {
+    @GetMapping("/user/{userId}")
+    fun getSavingsGoalsByUser(
+        @PathVariable userId: String
+    ): ResponseEntity<List<SavingsGoalDetailsResponse>> {
         val savingsGoals = savingsGoalService.getSavingsGoalsByUserId(userId)
-        return if (savingsGoals.isNotEmpty()) {
-            ResponseEntity.ok(savingsGoals)
-        } else {
-            ResponseEntity.noContent().build()
-        }
+        return ResponseEntity.ok(savingsGoals)
     }
 
     @GetMapping("/{id}")
-    fun getSavingsGoalById(@PathVariable id: String): ResponseEntity<SavingsGoalDetailsResponse> {
+    fun getSavingsGoalById(
+        @PathVariable id: String
+    ): ResponseEntity<SavingsGoalDetailsResponse> {
         val goal = savingsGoalService.getSavingsGoal(id)
         return ResponseEntity.ok(goal)
-    }
-
-    @GetMapping("/user/{userId}")
-    fun getSavingsGoalsByUserId(@PathVariable userId: String): ResponseEntity<List<SavingsGoalDetailsResponse>> {
-        val goals = savingsGoalService.getSavingsGoalsByUserId(userId)
-        return ResponseEntity.ok(goals)
     }
 
     @PatchMapping("/{id}")
@@ -54,7 +50,9 @@ class SavingsGoalController(
     }
 
     @DeleteMapping("/{id}")
-    fun deleteSavingsGoal(@PathVariable id: String): ResponseEntity<Void> {
+    fun deleteSavingsGoal(
+        @PathVariable id: String
+    ): ResponseEntity<Void> {
         savingsGoalService.deleteSavingsGoal(id)
         return ResponseEntity.noContent().build()
     }

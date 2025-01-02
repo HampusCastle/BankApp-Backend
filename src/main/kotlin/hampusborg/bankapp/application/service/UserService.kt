@@ -35,7 +35,6 @@ class UserService(
 
         val updatedUser = userRepository.save(user)
 
-        // Evict old cache and store the updated user in cache
         cacheHelperService.evictCache("userCache", userId)
         cacheHelperService.storeUser(updatedUser)
 
@@ -51,9 +50,7 @@ class UserService(
         return ResponseEntity.ok(response)
     }
 
-
     fun getUserProfile(userId: String): ResponseEntity<User> {
-
         val cachedUser = cacheHelperService.getUserFromCache(userId)
         if (cachedUser != null) {
             return ResponseEntity.ok(cachedUser)
