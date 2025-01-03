@@ -1,5 +1,6 @@
+package hampusborg.bankapp.application.service
+
 import hampusborg.bankapp.application.dto.request.SendNotificationRequest
-import hampusborg.bankapp.application.service.NotificationService
 import hampusborg.bankapp.core.domain.Notification
 import hampusborg.bankapp.core.repository.NotificationRepository
 import org.junit.jupiter.api.Assertions.assertEquals

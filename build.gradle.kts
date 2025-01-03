@@ -36,17 +36,10 @@ dependencies {
     // dotenv for environment variables
     implementation("io.github.cdimascio:dotenv-kotlin:6.2.2")
 
-    // QRCode dependencies
-    implementation("com.google.zxing:core:3.5.1")
-    implementation("com.google.zxing:javase:3.5.1")
-
     // JWT dependencies
     implementation("io.jsonwebtoken:jjwt-api:0.11.5")
     implementation("io.jsonwebtoken:jjwt-impl:0.11.5")
     implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
-
-    // Resilience4j for fault tolerance
-    implementation("io.github.resilience4j:resilience4j-kotlin:1.7.1")
 
     // AOP for logging
     implementation("org.springframework.boot:spring-boot-starter-aop")
@@ -59,7 +52,7 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok:1.18.24")
 
-    // Caching (if needed)
+    // Caching
     implementation("org.springframework.boot:spring-boot-starter-cache")
 
     // Testing dependencies for Web

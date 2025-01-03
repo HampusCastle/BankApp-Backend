@@ -34,7 +34,7 @@ jobs:
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew clean test --stacktrace
 
       - name: Build the application with Gradle
-        run: ./gradlew build --stacktrace
+        run: ./gradlew clean build --stacktrace
